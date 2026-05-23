@@ -73,8 +73,8 @@ echo "Full Disk Access confirmed."
 # ----------------------------------------
 # Permissions
 # ----------------------------------------
-osascript -e 'tell application "System Events" to get name'
-osascript -e 'tell application "Finder" to get name'
+osascript -e 'tell application "Finder" to get name of front window' -e 'tell application "System Events" to get name of current user'
+
 
 # ----------------------------------------
 # Enable Touch ID for sudo (macOS)
