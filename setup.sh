@@ -519,7 +519,7 @@ fonts=(
 for font in "${fonts[@]}"; do
   echo "Installing $font..."
 
-brew_install_if_missing "$app"
+brew_install_if_missing "$font"
 
 echo ""
 echo "======================================="
