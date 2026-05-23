@@ -112,49 +112,6 @@ defaults_write_if_needed com.apple.screencapture location "$HOME/Pictures/Screen
 
 echo "Screenshot save location set to ~/Pictures/Screenshots."
 
-# ----------------------------------------
-# Configure Screenshot Keyboard Shortcuts
-# ----------------------------------------
-
-echo "Configuring screenshot keyboard shortcuts..."
-
-HOTKEYS="$HOME/Library/Preferences/com.apple.symbolichotkeys.plist"
-
-# Save selected area as file → CMD+SHIFT+3
-/usr/libexec/PlistBuddy -c "Set :AppleSymbolicHotKeys:28:enabled true" "$HOTKEYS" 2>/dev/null || \
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28 dict" "$HOTKEYS"
-
-/usr/libexec/PlistBuddy -c "Delete :AppleSymbolicHotKeys:28:value" "$HOTKEYS" 2>/dev/null || true
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28:value dict" "$HOTKEYS"
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28:value:parameters array" "$HOTKEYS"
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28:value:parameters:0 integer 51" "$HOTKEYS"
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28:value:parameters:1 integer 20" "$HOTKEYS"
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28:value:parameters:2 integer 1179648" "$HOTKEYS"
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28:value:type string standard" "$HOTKEYS"
-
-# Copy selected area to clipboard → CMD+SHIFT+4
-/usr/libexec/PlistBuddy -c "Set :AppleSymbolicHotKeys:30:enabled true" "$HOTKEYS" 2>/dev/null || \
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30 dict" "$HOTKEYS"
-
-/usr/libexec/PlistBuddy -c "Delete :AppleSymbolicHotKeys:30:value" "$HOTKEYS" 2>/dev/null || true
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30:value dict" "$HOTKEYS"
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30:value:parameters array" "$HOTKEYS"
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30:value:parameters:0 integer 52" "$HOTKEYS"
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30:value:parameters:1 integer 21" "$HOTKEYS"
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30:value:parameters:2 integer 1179648" "$HOTKEYS"
-/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30:value:type string standard" "$HOTKEYS"
-
-# Disable save whole screen
-/usr/libexec/PlistBuddy -c "Set :AppleSymbolicHotKeys:29:enabled false" "$HOTKEYS" 2>/dev/null || true
-
-# Disable copy whole screen
-/usr/libexec/PlistBuddy -c "Set :AppleSymbolicHotKeys:31:enabled false" "$HOTKEYS" 2>/dev/null || true
-
-# Disable Spotlight shortcut (CMD+SPACE)
-/usr/libexec/PlistBuddy -c "Set :AppleSymbolicHotKeys:64:enabled false" "$HOTKEYS" 2>/dev/null || true
-
-echo "Screenshot and Spotlight shortcuts configured."
-
 # -----------------------------
 # Finder Settings
 # -----------------------------
@@ -375,8 +332,12 @@ killall "Shutter Encoder" 2>/dev/null || true
 # Install Rosetta (for Apple Silicon)
 # ----------------------------------------
 if [[ "$(uname -m)" == "arm64" ]]; then
-  echo "Installing Rosetta..."
-  softwareupdate --install-rosetta --agree-to-license
+  if ! /usr/bin/pgrep oahd >/dev/null 2>&1; then
+    echo "Installing Rosetta..."
+    softwareupdate --install-rosetta --agree-to-license
+  else
+    echo "Rosetta already installed."
+  fi
 fi
 
 # ----------------------------------------
@@ -497,8 +458,8 @@ fonts=(
 
 for font in "${fonts[@]}"; do
   echo "Installing $font..."
-
-brew_install_if_missing "$font"
+  brew_install_if_missing "$font"
+done
 
 echo ""
 echo "======================================="
