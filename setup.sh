@@ -466,6 +466,8 @@ echo "======================================="
 echo "Installing Mac App Store apps via mas"
 echo "======================================="
 
+if mas account >/dev/null 2>&1; then
+
 mas_apps=(
   310633997  # WhatsApp Messenger
   6698876601 # Folder Preview
@@ -484,9 +486,13 @@ mas_apps=(
 )
 
 for app_id in "${mas_apps[@]}"; do
-  echo "Installing MAS app $app_id…"
-  mas_install_if_missing "$app_id"
-done
+    echo "Installing MAS app $app_id..."
+    mas_install_if_missing "$app_id"
+  done
+
+else
+  echo "Not signed into the Mac App Store. Skipping MAS installs."
+fi
 
 # ----------------------------------------
 # Download Personal Config Files
