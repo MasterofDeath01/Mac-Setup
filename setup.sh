@@ -344,10 +344,7 @@ defaults_write_if_needed com.apple.dock persistent-apps -array
 # Disable "Show suggested and recent apps in Dock"
 defaults_write_if_needed com.apple.dock show-recents -bool false
 
-# -----------------------------
 # Disable Mission Control & App Expose
-# -----------------------------
-
 defaults_write_if_needed com.apple.dock showMissionControlGestureEnabled -bool false
 defaults_write_if_needed com.apple.dock showAppExposeGestureEnabled -bool false
 
@@ -357,7 +354,7 @@ echo "Dock settings applied."
 # Change Spelling Settings
 # -----------------------------
 
-echo "Disabling macOS autocorrect and automatic capitalization..."
+echo "Changing Spelling Settings..."
 
 # Disable automatic spelling correction
 defaults_write_if_needed NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
