@@ -35,21 +35,18 @@ brew_tap_if_missing() {
 defaults_write_if_needed() {
   local domain="$1"
   local key="$2"
-  local value="$3"
+  shift 2
 
+  local current
   current=$(defaults read "$domain" "$key" 2>/dev/null || true)
 
-  if [[ "$current" == "$value" ]]; then
+  if [[ "$current" == "$*" ]]; then
     echo "$domain $key already set."
   else
-    defaults_write_if_needed "$domain" "$key" "$value"
+    defaults write "$domain" "$key" "$@"
+    echo "Updated $domain $key"
   fi
 }
-
-if [[ -z "$TERM" ]]; then
-  open -a Terminal "$0"
-  exit 0
-fi
 
 echo "Checking Full Disk Access for Terminal..."
 
@@ -73,14 +70,11 @@ fi
 
 echo "Full Disk Access confirmed."
 
-
-
 # ----------------------------------------
 # Permissions
 # ----------------------------------------
 osascript -e 'tell application "System Events" to get name'
 osascript -e 'tell application "Finder" to get name'
-
 
 # ----------------------------------------
 # Enable Touch ID for sudo (macOS)
@@ -103,95 +97,6 @@ else
   echo "Touch ID already enabled."
 fi
 
-# ----------------------------------------
-# Open Settings Panes
-# ----------------------------------------
-
-echo "Please configure the following in System Settings:"
-echo "- Screenshot shortcuts"
-echo "- Control Center"
-echo "- Desktop & Dock"
-echo "- Wallpaper"
-
-open "x-apple.systempreferences:"
-
-# ----------------------------------------
-# Install Homebrew if not present
-# ----------------------------------------
-if command -v brew >/dev/null 2>&1; then
-  echo "Homebrew already installed."
-else
-  echo "Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-fi
-
-SHELL_NAME=$(basename "$SHELL")
-APPLE_SILICON="/opt/homebrew"
-INTEL="/usr/local"
-
-if [[ -d "$APPLE_SILICON" ]]; then
-  BREW_PREFIX="$APPLE_SILICON"
-else
-  BREW_PREFIX="$INTEL"
-fi
-
-case "$SHELL_NAME" in
-  zsh) PROFILE="$HOME/.zshrc" ;;
-  bash) PROFILE="$HOME/.bash_profile" ;;
-  *) PROFILE="$HOME/.profile" ;;
-esac
-
-echo ""
-echo "Configuring Homebrew PATH in $PROFILE"
-
-if ! grep -q "brew shellenv" "$PROFILE" 2>/dev/null; then
-  {
-    echo ""
-    echo "# Homebrew"
-    echo "eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
-  } >> "$PROFILE"
-  echo "PATH updated."
-else
-  echo "PATH already configured."
-fi
-
-# Load Homebrew for this session
-eval "$($BREW_PREFIX/bin/brew shellenv)"
-
-brew update
-
-echo ""
-echo "======================================="
-echo " Homebrew installation complete!"
-echo "======================================="
-echo ""
-
-# ----------------------------------------
-# Install Privileged Apps FIRST
-# ----------------------------------------
-echo "Installing privileged apps..."
-
-privileged_apps=(
-  auto-subs
-  blackhole-2ch
-  microsoft-teams
-  mas
-  shutter-encoder
-)
-
-for app in "${privileged_apps[@]}"; do
-  echo "Installing $app..."
-  brew_install_if_missing "$app"
-done
-
-# ----------------------------------------
-# Install Rosetta (for Apple Silicon)
-# ----------------------------------------
-if [[ "$(uname -m)" == "arm64" ]]; then
-  echo "Installing Rosetta..."
-  softwareupdate --install-rosetta --agree-to-license
-fi
-
 # -----------------------------
 # Screenshot Directory Change
 # -----------------------------
@@ -210,58 +115,43 @@ echo "Screenshot save location set to ~/Pictures/Screenshots."
 # ----------------------------------------
 # Configure Screenshot Keyboard Shortcuts
 # ----------------------------------------
+
 echo "Configuring screenshot keyboard shortcuts..."
 
+HOTKEYS="$HOME/Library/Preferences/com.apple.symbolichotkeys.plist"
+
 # Save selected area as file → CMD+SHIFT+3
-defaults_write_if_needed com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 28 "
-<dict>
-  <key>enabled</key><true/>
-  <key>value</key>
-  <dict>
-    <key>parameters</key>
-    <array>
-      <integer>51</integer>
-      <integer>20</integer>
-      <integer>1179648</integer>
-    </array>
-    <key>type</key><string>standard</string>
-  </dict>
-</dict>"
+/usr/libexec/PlistBuddy -c "Set :AppleSymbolicHotKeys:28:enabled true" "$HOTKEYS" 2>/dev/null || \
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28 dict" "$HOTKEYS"
+
+/usr/libexec/PlistBuddy -c "Delete :AppleSymbolicHotKeys:28:value" "$HOTKEYS" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28:value dict" "$HOTKEYS"
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28:value:parameters array" "$HOTKEYS"
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28:value:parameters:0 integer 51" "$HOTKEYS"
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28:value:parameters:1 integer 20" "$HOTKEYS"
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28:value:parameters:2 integer 1179648" "$HOTKEYS"
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:28:value:type string standard" "$HOTKEYS"
 
 # Copy selected area to clipboard → CMD+SHIFT+4
-defaults_write_if_needed com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 30 "
-<dict>
-  <key>enabled</key><true/>
-  <key>value</key>
-  <dict>
-    <key>parameters</key>
-    <array>
-      <integer>52</integer>
-      <integer>21</integer>
-      <integer>1179648</integer>
-    </array>
-    <key>type</key><string>standard</string>
-  </dict>
-</dict>"
+/usr/libexec/PlistBuddy -c "Set :AppleSymbolicHotKeys:30:enabled true" "$HOTKEYS" 2>/dev/null || \
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30 dict" "$HOTKEYS"
 
-# Disable:
-# Save whole screen as file
-defaults_write_if_needed com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 29 "
-<dict>
-  <key>enabled</key><false/>
-</dict>"
+/usr/libexec/PlistBuddy -c "Delete :AppleSymbolicHotKeys:30:value" "$HOTKEYS" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30:value dict" "$HOTKEYS"
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30:value:parameters array" "$HOTKEYS"
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30:value:parameters:0 integer 52" "$HOTKEYS"
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30:value:parameters:1 integer 21" "$HOTKEYS"
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30:value:parameters:2 integer 1179648" "$HOTKEYS"
+/usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:30:value:type string standard" "$HOTKEYS"
 
-# Copy whole screen to clipboard
-defaults_write_if_needed com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 31 "
-<dict>
-  <key>enabled</key><false/>
-</dict>"
+# Disable save whole screen
+/usr/libexec/PlistBuddy -c "Set :AppleSymbolicHotKeys:29:enabled false" "$HOTKEYS" 2>/dev/null || true
+
+# Disable copy whole screen
+/usr/libexec/PlistBuddy -c "Set :AppleSymbolicHotKeys:31:enabled false" "$HOTKEYS" 2>/dev/null || true
 
 # Disable Spotlight shortcut (CMD+SPACE)
-defaults_write_if_needed com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 64 "
-<dict>
-  <key>enabled</key><false/>
-</dict>"
+/usr/libexec/PlistBuddy -c "Set :AppleSymbolicHotKeys:64:enabled false" "$HOTKEYS" 2>/dev/null || true
 
 echo "Screenshot and Spotlight shortcuts configured."
 
@@ -388,14 +278,106 @@ killall Finder 2>/dev/null || true
 killall ControlCenter 2>/dev/null || true
 killall SystemUIServer 2>/dev/null || true
 killall TextEdit 2>/dev/null || true
+killall cfprefsd 2>/dev/null || true
 
 echo "All settings applied!"
+
+# ----------------------------------------
+# Open Settings Panes
+# ----------------------------------------
+
+echo "Please configure the following in System Settings:"
+echo "- Screenshot shortcuts"
+echo "- Control Center"
+echo "- Desktop & Dock"
+echo "- Wallpaper"
+
+open "x-apple.systempreferences:"
+
+# ----------------------------------------
+# Install Homebrew if not present
+# ----------------------------------------
+if command -v brew >/dev/null 2>&1; then
+  echo "Homebrew already installed."
+else
+  echo "Installing Homebrew..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+
+SHELL_NAME=$(basename "$SHELL")
+APPLE_SILICON="/opt/homebrew"
+INTEL="/usr/local"
+
+if [[ -d "$APPLE_SILICON" ]]; then
+  BREW_PREFIX="$APPLE_SILICON"
+else
+  BREW_PREFIX="$INTEL"
+fi
+
+case "$SHELL_NAME" in
+  zsh) PROFILE="$HOME/.zshrc" ;;
+  bash) PROFILE="$HOME/.bash_profile" ;;
+  *) PROFILE="$HOME/.profile" ;;
+esac
+
+echo ""
+echo "Configuring Homebrew PATH in $PROFILE"
+
+if ! grep -q "brew shellenv" "$PROFILE" 2>/dev/null; then
+  {
+    echo ""
+    echo "# Homebrew"
+    echo "eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
+  } >> "$PROFILE"
+  echo "PATH updated."
+else
+  echo "PATH already configured."
+fi
+
+# Load Homebrew for this session
+eval "$($BREW_PREFIX/bin/brew shellenv)"
+
+brew update
+
+echo ""
+echo "======================================="
+echo " Homebrew installation complete!"
+echo "======================================="
+echo ""
+
 # ----------------------------------------
 # Tap custom Homebrew repo
 # ----------------------------------------
 echo ""
 echo "Tapping MasterofDeath01/apps..."
 brew_tap_if_missing "MasterofDeath01/apps"
+
+# ----------------------------------------
+# Install Privileged Apps FIRST
+# ----------------------------------------
+echo "Installing privileged apps..."
+
+privileged_apps=(
+  auto-subs
+  blackhole-2ch
+  microsoft-teams
+  mas
+  shutter-encoder
+)
+
+for app in "${privileged_apps[@]}"; do
+  echo "Installing $app..."
+  brew_install_if_missing "$app"
+done
+
+killall "Shutter Encoder" 2>/dev/null || true
+# ----------------------------------------
+# Install Rosetta (for Apple Silicon)
+# ----------------------------------------
+if [[ "$(uname -m)" == "arm64" ]]; then
+  echo "Installing Rosetta..."
+  softwareupdate --install-rosetta --agree-to-license
+fi
 
 # ----------------------------------------
 # Install custom apps & fonts
@@ -496,7 +478,7 @@ for app in "${normal_apps[@]}"; do
   echo "Installing $app..."
 
   brew_install_if_missing "$app"
-
+done
 # ----------------------------------------
 # Install Fonts
 # ----------------------------------------
@@ -544,6 +526,26 @@ for app_id in "${mas_apps[@]}"; do
   echo "Installing MAS app $app_id…"
   mas_install_if_missing "$app_id"
 done
+
+# ----------------------------------------
+# Download Personal Config Files
+# ----------------------------------------
+
+echo "Downloading personal config files..."
+
+DOWNLOADS_DIR="$HOME/Downloads"
+
+mkdir -p "$DOWNLOADS_DIR"
+
+curl -L \
+  -o "$DOWNLOADS_DIR/Raycast.rayconfig" \
+  "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/Raycast.rayconfig"
+
+curl -L \
+  -o "$DOWNLOADS_DIR/MasterofDeath's Editing Script.jsx" \
+  "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/MasterofDeath%27s%20Editing%20Script.jsx"
+
+echo "Personal config files downloaded to Downloads."
 
 # ----------------------------------------
 # Xattr Apps
