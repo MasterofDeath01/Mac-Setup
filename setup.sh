@@ -66,6 +66,7 @@ require_full_disk_access() {
 display dialog "Terminal needs Full Disk Access.\n\nEnable it in:\nSystem Settings → Privacy & Security → Full Disk Access\n\nThen FULLY QUIT Terminal and re-run the script." buttons {"Open Settings"} default button 1 with icon caution
 EOF
     open "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
+  sleep 1
     osascript -e 'tell application "Terminal" to quit'
 
 exit 1
@@ -92,6 +93,7 @@ EOF
 display dialog "Terminal needs Accessibility access.\n\nEnable it in:\nSystem Settings → Privacy & Security → Accessibility\n\nThen FULLY QUIT Terminal and re-run the script." buttons {"Open Settings"} default button 1 with icon caution
 EOF
     open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+  sleep 1
     osascript -e 'tell application "Terminal" to quit'
 
 exit 1
@@ -164,31 +166,6 @@ defaults_write_if_needed com.apple.finder NewWindowTargetPath -string "file://${
 defaults_write_if_needed com.apple.finder ShowPathbar -bool true
 defaults_write_if_needed com.apple.finder ShowStatusBar -bool true
 
-echo "Finder preferences configured."
-
-# ----------------------------------------
-# Configure Finder Sidebar
-# ----------------------------------------
-echo "Configuring Finder sidebar..."
-
-# Hide Recents
-defaults_write_if_needed com.apple.finder ShowRecentTags -bool false
-defaults_write_if_needed com.apple.finder FXRemoveOldTrashItems -bool true
-
-# Sidebar items
-defaults_write_if_needed com.apple.sidebarlists systemitems -dict-add ShowAirDrop -bool false
-defaults_write_if_needed com.apple.sidebarlists systemitems -dict-add ShowBonjour -bool false
-defaults_write_if_needed com.apple.sidebarlists systemitems -dict-add ShowConnectedServers -bool false
-
-# Remove shared section
-defaults_write_if_needed com.apple.finder SidebarSharedSectionDisclosedState -bool false
-
-# Remove recent tags
-defaults_write_if_needed com.apple.finder ShowRecentTags -bool false
-
-# Hide sidebar tags section entirely
-defaults_write_if_needed com.apple.finder FXTagsEnabled -bool false
-
 #List View
 defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
 
@@ -200,19 +177,31 @@ defaults write com.apple.finder FXCalculateAllSizes -bool true
 
 #Refresh .DS_Store
 echo "Refreshing .DS_Store Files — this may take a while..."
-find ~ -name ".DS_Store" -depth -exec rm {} \; 2>/dev/null
+find "$HOME" \
+  -path "$HOME/Library" -prune -o \
+  -name ".DS_Store" -type f -delete 2>/dev/null
 
 echo "Finder settings configured"
 
 # -----------------------------
 # TextEdit Preferences
 # -----------------------------
-echo "Configuring TextEdit to open plain text by default..."
 
-defaults_write_if_needed com.apple.TextEdit NSShowAppCentricOpenPanelInsteadOfUntitledFile -bool false
-defaults_write_if_needed com.apple.TextEdit RichText -int 0
-defaults_write_if_needed com.apple.TextEdit PlainTextEncoding -int 4
-defaults_write_if_needed com.apple.TextEdit PlainTextEncodingForWrite -int 4
+echo "Configuring TextEdit..."
+
+# Force plain text mode
+defaults write com.apple.TextEdit RichText -bool false
+
+# Encoding
+defaults write com.apple.TextEdit PlainTextEncoding -int 4
+defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
+
+# Global smart text rules
+defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
+
+# Disable iCloud new document default
+defaults write NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
 
 echo "TextEdit preferences configured."
 
@@ -272,6 +261,8 @@ defaults_write_if_needed com.apple.controlcenter BatteryShowPercentage -bool tru
 defaults_write_if_needed com.apple.loginwindow TALLogoutSavesState -bool false
 defaults_write_if_needed com.apple.coreservices.uiagent CSUIShowCloudSetupDialogs -bool false
 defaults_write_if_needed NSGlobalDomain NSWindowResizeTime -float 0.001
+defaults_write_if_needed NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
+defaults_write_if_needed NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 -bool true
 
 # -----------------------------
 # Apply settings
@@ -522,7 +513,9 @@ for app_id in "${mas_apps[@]}"; do
 spicetify config spotify_path "/Applications/Spotify.app/Contents/Resources"
 spicetify update
 spicetify apply
-curl -fsSL https://raw.githubusercontent.com/spicetify/marketplace/main/resources/install.sh | sh
+if [[ ! -d "$HOME/.spicetify/CustomApps/spicetify-marketplace" ]]; then
+  curl -fsSL https://raw.githubusercontent.com/spicetify/marketplace/main/resources/install.sh | sh
+fi
 spicetify apply
 
   
