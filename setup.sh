@@ -179,14 +179,9 @@ defaults_write_if_needed com.apple.finder FXDefaultSearchScope -string "SCcf"
 defaults_write_if_needed com.apple.finder NewWindowTarget -string "PfLo"
 defaults_write_if_needed com.apple.finder NewWindowTargetPath -string "file://${HOME}/Downloads/"
 
+#Show Path and Status Bar
 defaults_write_if_needed com.apple.finder ShowPathbar -bool true
 defaults_write_if_needed com.apple.finder ShowStatusBar -bool true
-
-#List View
-defaults_write_if_needed com.apple.finder FXPreferredViewStyle -string "Nlsv"
-
-#Large Icons
-defaults_write_if_needed com.apple.finder StandardViewSettings -dict-add "ListViewSettings" '<dict><key>iconSize</key><integer>32</integer></dict>'
 
 #Calculate Folder Sizes
 defaults_write_if_needed com.apple.finder FXCalculateAllSizes -bool true
