@@ -43,32 +43,33 @@ brew_tap_if_missing() {
 }
 
 defaults_write_if_needed() {
-  local domain="${1:-}"
-  local key="${2:-}"
-  local type="${3:-}"
-  local value="${4:-}"
-
-  if [[ -z "$domain" || -z "$key" || -z "$type" || -z "$value" ]]; then
-    echo "ERROR: defaults write requires 4 args: domain key type value"
-    echo "Got: $*"
-    return 1
-  fi
+  local domain="$1"
+  local key="$2"
+  local type="$3"
+  local value="${4:-__NO_VALUE__}"
 
   local current
   current=$(defaults read "$domain" "$key" 2>/dev/null || echo "__MISSING__")
 
-  case "$type" in
-    -bool)
-      [[ "$current" == "1" ]] && current="true"
-      [[ "$current" == "0" ]] && current="false"
-      ;;
-  esac
+  if [[ "$value" == "__NO_VALUE__" ]]; then
+    # handles -array, -dict, etc.
+    if [[ "$current" == "0" || "$current" == "1" ]]; then
+      current="__BOOL__"
+    fi
 
-  if [[ "$current" == "$value" ]]; then
-    echo "$domain $key already set."
+    if [[ "$current" == "__MISSING__" ]]; then
+      echo "Updated $domain $key"
+      defaults write "$domain" "$key" $type
+    else
+      echo "$domain $key already set."
+    fi
   else
-    defaults write "$domain" "$key" "$type" "$value"
-    echo "Updated $domain $key"
+    if [[ "$current" == "$value" ]]; then
+      echo "$domain $key already set."
+    else
+      defaults write "$domain" "$key" $type "$value"
+      echo "Updated $domain $key"
+    fi
   fi
 }
 
