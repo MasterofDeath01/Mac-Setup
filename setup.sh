@@ -158,7 +158,7 @@ echo "Configuring screenshot save location..."
 mkdir -p "$HOME/Pictures/Screenshots"
 
 # Set screenshot save location
-defaults_write_if_needed com.apple.screencapture location "$HOME/Pictures/Screenshots"
+defaults_write_if_needed com.apple.screencapture location -string "$HOME/Pictures/Screenshots"
 
 echo "Screenshot save location set to ~/Pictures/Screenshots."
 
