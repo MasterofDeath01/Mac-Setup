@@ -90,11 +90,14 @@ exit 1
 
 require_accessibility() {
   echo "Checking Accessibility permission..."
+
   local access_test
-  access_test=$(osascript <<EOF
+  access_test=$(osascript <<'EOF'
 tell application "System Events"
   try
-    get name of every process
+    tell process "Finder"
+      get frontmost
+    end tell
     return "OK"
   on error
     return "DENIED"
@@ -102,16 +105,20 @@ tell application "System Events"
 end tell
 EOF
 )
+
   if [[ "$access_test" != "OK" ]]; then
-    osascript <<EOF
+    echo "Accessibility NOT granted."
+
+    osascript <<'EOF'
 display dialog "Terminal needs Accessibility access.\n\nEnable it in:\nSystem Settings → Privacy & Security → Accessibility\n\nThen FULLY QUIT Terminal and re-run the script." buttons {"Open Settings"} default button 1 with icon caution
 EOF
-    open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-  sleep 1
-    osascript -e 'tell application "Terminal" to quit'
 
-exit 1
+    open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+    sleep 1
+    osascript -e 'tell application "Terminal" to quit'
+    exit 1
   fi
+
   echo "Accessibility permission confirmed."
 }
 
