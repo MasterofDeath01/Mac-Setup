@@ -74,46 +74,12 @@ exit 1
   echo "Full Disk Access confirmed."
 }
 
-require_accessibility() {
-  echo "Checking Accessibility permission..."
-
-  local access_test
-  access_test=$(osascript <<'EOF'
-tell application "System Events"
-  try
-    tell process "Finder"
-      get frontmost
-    end tell
-    return "OK"
-  on error
-    return "DENIED"
-  end try
-end tell
-EOF
-)
-
-  if [[ "$access_test" != "OK" ]]; then
-    echo "Accessibility NOT granted."
-
-    osascript <<'EOF'
-display dialog "Terminal needs Accessibility access.\n\nEnable it in:\nSystem Settings → Privacy & Security → Accessibility\n\nThen FULLY QUIT Terminal and re-run the script." buttons {"Open Settings"} default button 1 with icon caution
-EOF
-
-    open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-    sleep 1
-    osascript -e 'tell application "Terminal" to quit'
-    exit 1
-  fi
-
-  echo "Accessibility permission confirmed."
-}
-
 # ----------------------------------------
 # Permissions
 # ----------------------------------------
 require_full_disk_access
-require_accessibility
-
+open / 2>/dev/null || true
+osascript -e 'tell application "Finder" to get name of front window' -e 'tell application "System Events" to get name of current user'
 # ----------------------------------------
 # Enable Touch ID for sudo (macOS)
 # ----------------------------------------
