@@ -37,13 +37,23 @@ defaults_write_if_needed() {
   local key="$2"
   shift 2
 
-  local current
-  current=$(defaults read "$domain" "$key" 2>/dev/null || true)
+  local type="$1"
+  local value="$2"
 
-  if [[ "$current" == "$*" ]]; then
+  local current
+  current=$(defaults read "$domain" "$key" 2>/dev/null || echo "__MISSING__")
+
+  case "$type" in
+    -bool)
+      [[ "$current" == "1" ]] && current="true"
+      [[ "$current" == "0" ]] && current="false"
+      ;;
+  esac
+
+  if [[ "$current" == "$value" ]]; then
     echo "$domain $key already set."
   else
-    defaults write "$domain" "$key" "$@"
+    defaults write "$domain" "$key" "$type" "$value"
     echo "Updated $domain $key"
   fi
 }
@@ -262,7 +272,6 @@ defaults_write_if_needed com.apple.controlcenter BatteryShowPercentage -bool tru
 defaults_write_if_needed com.apple.loginwindow TALLogoutSavesState -bool false
 defaults_write_if_needed com.apple.coreservices.uiagent CSUIShowCloudSetupDialogs -bool false
 defaults_write_if_needed NSGlobalDomain NSWindowResizeTime -float 0.001
-defaults_write_if_needed com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
 
 # -----------------------------
 # Apply settings
