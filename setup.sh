@@ -121,11 +121,6 @@ exit 1
 require_full_disk_access
 require_accessibility
 
-osascript -e 'tell application "Finder" to get name of front window' -e 'tell application "System Events" to get name of current user'
-
-
-
-
 # ----------------------------------------
 # Enable Touch ID for sudo (macOS)
 # ----------------------------------------
