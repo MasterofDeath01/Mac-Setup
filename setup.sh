@@ -289,25 +289,13 @@ killall cfprefsd 2>/dev/null || true
 echo "All settings applied!"
 
 # ----------------------------------------
-# Open Settings Panes
-# ----------------------------------------
-
-echo "Please configure the following in System Settings:"
-echo "- Screenshot shortcuts"
-echo "- Control Center"
-echo "- Desktop & Dock"
-echo "- Wallpaper"
-
-open "x-apple.systempreferences:"
-
-# ----------------------------------------
 # Install Homebrew if not present
 # ----------------------------------------
 if command -v brew >/dev/null 2>&1; then
   echo "Homebrew already installed."
 else
   echo "Installing Homebrew..."
- NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+ /bin/bash "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
 SHELL_NAME=$(basename "$SHELL")
@@ -357,6 +345,18 @@ echo ""
 echo ""
 echo "Tapping MasterofDeath01/apps..."
 brew_tap_if_missing "MasterofDeath01/apps"
+
+# ----------------------------------------
+# Open Settings Panes
+# ----------------------------------------
+
+echo "Please configure the following in System Settings:"
+echo "- Screenshot shortcuts"
+echo "- Control Center"
+echo "- Desktop & Dock"
+echo "- Wallpaper"
+
+open "x-apple.systempreferences:"
 
 # ----------------------------------------
 # Install Privileged Apps FIRST
