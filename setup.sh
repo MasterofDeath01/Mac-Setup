@@ -365,7 +365,8 @@ sleep 3
 
 osascript -e 'quit app "Shutter Encoder"' 2>/dev/null || true
 
-mas install 310633997 #Whatsapp Messenger is also priviledged
+mas_install_if_missing 310633997 #Whatsapp Messenger
+mas_install_if_missing 6698876601 # Folder Preview
 # ----------------------------------------
 # Install Rosetta (for Apple Silicon)
 # ----------------------------------------
@@ -486,7 +487,6 @@ done
 echo "Installing Mac App Store apps..."
 
 mas_apps=(
-  6698876601 # Folder Preview
   6745342698 # Ublock Origin Lite
   1592917505 # Noir - Dark Mode for Safari
   510620098  # MediaInfo
