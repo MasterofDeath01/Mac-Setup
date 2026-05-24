@@ -6,10 +6,20 @@ set -euo pipefail
 # ----------------------------------------
 
 brew_install_if_missing() {
-  if brew list --cask "$1" >/dev/null 2>&1 || brew list "$1" >/dev/null 2>&1; then
-    echo "$1 already installed, skipping."
+  local name="$1"
+
+  if brew list --formula "$name" >/dev/null 2>&1 || \
+     brew list --cask "$name" >/dev/null 2>&1; then
+    echo "$name already installed, skipping."
+    return 0
+  fi
+
+  if brew install --cask "$name" 2>/dev/null; then
+    echo "Installed cask: $name"
+  elif brew install "$name" 2>/dev/null; then
+    echo "Installed formula: $name"
   else
-    brew install --cask "$1" || brew install "$1" || echo "Failed to install $1"
+    echo "Failed to install $name"
   fi
 }
 
@@ -368,9 +378,11 @@ for app in "${privileged_apps[@]}"; do
   brew_install_if_missing "$app"
 done
 
-mas install 310633997 #Whatsapp Messenger is also priviledged
+sleep 3
 
 osascript -e 'quit app "Shutter Encoder"' 2>/dev/null || true
+
+mas install 310633997 #Whatsapp Messenger is also priviledged
 # ----------------------------------------
 # Install Rosetta (for Apple Silicon)
 # ----------------------------------------
@@ -514,6 +526,12 @@ for app_id in "${mas_apps[@]}"; do
 # ----------------------------------------
 # Install Spicetify
 # ----------------------------------------
+open /Applications/Spotify.app 2>/dev/null || true
+
+echo "Sign in to Spotify and wait 60s"...
+
+sleep 180
+
 spicetify config spotify_path "/Applications/Spotify.app/Contents/Resources"
 spicetify update
 spicetify apply
