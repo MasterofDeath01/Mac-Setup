@@ -233,7 +233,7 @@ defaults_write_if_needed com.apple.dock autohide-delay -int 0
 defaults_write_if_needed com.apple.dock autohide-time-modifier -float 0.5
 
 # Remove all apps from dock
-defaults_write_if_needed com.apple.dock persistent-apps '()'
+defaults_write_if_needed com.apple.dock persistent-apps -array
 
 # Disable "Show suggested and recent apps in Dock"
 defaults_write_if_needed com.apple.dock show-recents -bool false
