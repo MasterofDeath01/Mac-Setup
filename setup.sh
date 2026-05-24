@@ -307,7 +307,7 @@ if command -v brew >/dev/null 2>&1; then
   echo "Homebrew already installed."
 else
   echo "Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+ NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
 SHELL_NAME=$(basename "$SHELL")
