@@ -155,6 +155,19 @@ defaults_write_if_needed com.apple.finder ShowRecentTags -bool false
 # Hide sidebar tags section entirely
 defaults_write_if_needed com.apple.finder FXTagsEnabled -bool false
 
+#List View
+defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+
+#Large Icons
+defaults write com.apple.finder StandardViewSettings -dict-add "ListViewSettings" '<dict><key>iconSize</key><integer>32</integer></dict>'
+
+#Calculate Folder Sizes
+defaults write com.apple.finder FXCalculateAllSizes -bool true
+
+#Refresh .DS_Store
+echo "Refreshing .DS_Store Files — this may take a while..."
+find ~ -name ".DS_Store" -depth -exec rm {} \; 2>/dev/null
+
 echo "Finder settings configured"
 
 # -----------------------------
@@ -402,6 +415,7 @@ brew_apps=(
   middle
   adobe-creative-cloud-cleaner-tool
   spotify
+  spicetify-cli
   audacity
   keka
   discord
@@ -446,28 +460,6 @@ for cask in "${brew_apps[@]}"; do
   brew_install_if_missing "$cask"
 done 
 
-# ----------------------------------------
-# Install Fonts
-# ----------------------------------------
-echo "Installing fonts..."
-fonts=(
-  font-baloo-2
-  font-bebas-neue
-  font-beau-rivage
-  font-courgette
-  font-courier-new
-  font-courier-prime
-  font-courier-prime-code
-  font-nunito
-  font-comfortaa
-)
-
-for font in "${fonts[@]}"; do
-  echo "Installing $font..."
-  brew_install_if_missing "$font"
-done
-
-
 echo "Installing Mac App Store apps..."
 
 mas_apps=(
@@ -494,8 +486,11 @@ for app_id in "${mas_apps[@]}"; do
 # ----------------------------------------
 # Install Spicetify
 # ----------------------------------------
-
-
+spicetify config spotify_path "/Applications/Spotify.app/Contents/Resources"
+spicetify update
+spicetify apply
+curl -fsSL https://raw.githubusercontent.com/spicetify/marketplace/main/resources/install.sh | sh
+spicetify apply
 
   
 # ----------------------------------------
