@@ -33,12 +33,16 @@ brew_tap_if_missing() {
 }
 
 defaults_write_if_needed() {
-  local domain="$1"
-  local key="$2"
-  shift 2
+  local domain="${1:-}"
+  local key="${2:-}"
+  local type="${3:-}"
+  local value="${4:-}"
 
-  local type="$1"
-  local value="$2"
+  if [[ -z "$domain" || -z "$key" || -z "$type" || -z "$value" ]]; then
+    echo "ERROR: defaults_write_if_needed requires 4 args: domain key type value"
+    echo "Got: $*"
+    return 1
+  fi
 
   local current
   current=$(defaults read "$domain" "$key" 2>/dev/null || echo "__MISSING__")
