@@ -48,32 +48,56 @@ defaults_write_if_needed() {
   fi
 }
 
-echo "Checking Full Disk Access for Terminal..."
+require_full_disk_access() {
+  echo "Checking Full Disk Access..."
+  local tcc_db="$HOME/Library/Application Support/com.apple.TCC/TCC.db"
+  if ! sqlite3 "$tcc_db" ".tables" >/dev/null 2>&1; then
+    osascript <<EOF
+display dialog "Terminal needs Full Disk Access.\n\nEnable it in:\nSystem Settings → Privacy & Security → Full Disk Access\n\nThen FULLY QUIT Terminal and re-run the script." buttons {"Open Settings"} default button 1 with icon caution
+EOF
+    open "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
+    osascript -e 'tell application "Terminal" to quit'
 
-FDA_TEST="/Library/Application Support/com.apple.TCC/TCC.db"
+exit 1
+  fi
+  echo "Full Disk Access confirmed."
+}
 
-if ! sudo sqlite3 "$FDA_TEST" "SELECT count(*) FROM access;" >/dev/null 2>&1; then
-  echo ""
-  echo "======================================="
-  echo " Full Disk Access Required"
-  echo "======================================="
-  echo ""
-  echo "1. Enable Full Disk Access for Terminal"
-  echo "2. Return here and re-run the script"
-  echo ""
+require_accessibility() {
+  echo "Checking Accessibility permission..."
+  local access_test
+  access_test=$(osascript <<EOF
+tell application "System Events"
+  try
+    get name of every process
+    return "OK"
+  on error
+    return "DENIED"
+  end try
+end tell
+EOF
+)
+  if [[ "$access_test" != "OK" ]]; then
+    osascript <<EOF
+display dialog "Terminal needs Accessibility access.\n\nEnable it in:\nSystem Settings → Privacy & Security → Accessibility\n\nThen FULLY QUIT Terminal and re-run the script." buttons {"Open Settings"} default button 1 with icon caution
+EOF
+    open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+    osascript -e 'tell application "Terminal" to quit'
 
-  open "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
-
-  read -p "Press ENTER after enabling Full Disk Access to exit..."
-  exit 1
-fi
-
-echo "Full Disk Access confirmed."
+exit 1
+  fi
+  echo "Accessibility permission confirmed."
+}
 
 # ----------------------------------------
 # Permissions
 # ----------------------------------------
+require_full_disk_access
+require_accessibility
+
 osascript -e 'tell application "Finder" to get name of front window' -e 'tell application "System Events" to get name of current user'
+
+
 
 
 # ----------------------------------------
