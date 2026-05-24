@@ -331,8 +331,30 @@ sleep 3
 
 osascript -e 'quit app "Shutter Encoder"' 2>/dev/null || true
 
-mas_install_if_missing 310633997 #Whatsapp Messenger
-mas_install_if_missing 6698876601 # Folder Preview
+echo "Installing Mac App Store apps..."
+
+mas_apps=(
+  6745342698 # Ublock Origin Lite
+  310633997 #Whatsapp Messenger
+  6698876601 # Folder Preview
+  1592917505 # Noir - Dark Mode for Safari
+  510620098  # MediaInfo
+  1448916662 # Step Two
+  1355679052 # Dropover
+  784801555  # Microsoft OneNote
+  462054704  # Microsoft Word
+  462058435  # Microsoft Excel
+  462062816  # Microsoft PowerPoint
+  823766827  # OneDrive
+  985367838  # Microsoft Outlook
+  # Whatsapp has been moved to top because it requires admin
+)
+
+for app_id in "${mas_apps[@]}"; do
+    echo "Installing MAS app $app_id..."
+    mas_install_if_missing "$app_id"
+  done
+
 # ----------------------------------------
 # Install Rosetta (for Apple Silicon)
 # ----------------------------------------
@@ -449,28 +471,6 @@ for cask in "${brew_apps[@]}"; do
   echo "Installing $cask..."
   brew_install_if_missing "$cask"
 done 
-
-echo "Installing Mac App Store apps..."
-
-mas_apps=(
-  6745342698 # Ublock Origin Lite
-  1592917505 # Noir - Dark Mode for Safari
-  510620098  # MediaInfo
-  1448916662 # Step Two
-  1355679052 # Dropover
-  784801555  # Microsoft OneNote
-  462054704  # Microsoft Word
-  462058435  # Microsoft Excel
-  462062816  # Microsoft PowerPoint
-  823766827  # OneDrive
-  985367838  # Microsoft Outlook
-  # Whatsapp has been moved to top because it requires admin
-)
-
-for app_id in "${mas_apps[@]}"; do
-    echo "Installing MAS app $app_id..."
-    mas_install_if_missing "$app_id"
-  done
 
 # ----------------------------------------
 # Download Personal Config Files
