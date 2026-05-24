@@ -67,7 +67,7 @@ defaults_write_if_needed() {
   if [[ "$current" == "$value" ]]; then
     echo "$domain $key already set."
   else
-    defaults write "$domain" "$key" "$type" "$value"
+    defaults_write_if_needed "$domain" "$key" "$type" "$value"
     echo "Updated $domain $key"
   fi
 }
@@ -158,7 +158,7 @@ echo "Configuring screenshot save location..."
 mkdir -p "$HOME/Pictures/Screenshots"
 
 # Set screenshot save location
-defaults_write_if_needed com.apple.screencapture location -string "$HOME/Pictures/Screenshots"
+defaults_write_if_needed com.apple.screencapture location -string "$HOME/Pictures/Screenshots" 
 
 echo "Screenshot save location set to ~/Pictures/Screenshots."
 
@@ -181,13 +181,13 @@ defaults_write_if_needed com.apple.finder ShowPathbar -bool true
 defaults_write_if_needed com.apple.finder ShowStatusBar -bool true
 
 #List View
-defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+defaults_write_if_needed com.apple.finder FXPreferredViewStyle -string "Nlsv"
 
 #Large Icons
-defaults write com.apple.finder StandardViewSettings -dict-add "ListViewSettings" '<dict><key>iconSize</key><integer>32</integer></dict>'
+defaults_write_if_needed com.apple.finder StandardViewSettings -dict-add "ListViewSettings" '<dict><key>iconSize</key><integer>32</integer></dict>'
 
 #Calculate Folder Sizes
-defaults write com.apple.finder FXCalculateAllSizes -bool true
+defaults_write_if_needed com.apple.finder FXCalculateAllSizes -bool true
 
 #Refresh .DS_Store
 echo "Refreshing .DS_Store Files — this may take a while..."
@@ -204,18 +204,18 @@ echo "Finder settings configured"
 echo "Configuring TextEdit..."
 
 # Force plain text mode
-defaults write com.apple.TextEdit RichText -bool false
+defaults_write_if_needed com.apple.TextEdit RichText -bool false
 
 # Encoding
-defaults write com.apple.TextEdit PlainTextEncoding -int 4
-defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
+defaults_write_if_needed com.apple.TextEdit PlainTextEncoding -int 4
+defaults_write_if_needed com.apple.TextEdit PlainTextEncodingForWrite -int 4
 
 # Global smart text rules
-defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
-defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
+defaults_write_if_needed NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
+defaults_write_if_needed NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
 
 # Disable iCloud new document default
-defaults write NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
+defaults_write_if_needed NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
 
 echo "TextEdit preferences configured."
 
