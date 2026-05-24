@@ -590,6 +590,13 @@ apps_to_open=(
   "Folder Preview"
   "Raycast"
   "Middle"
+
+  #Apps for Dock
+  "Safari"
+  "Modrinth App"
+  "Discord"
+  "WhatsApp"
+  "ChatGPT"
 )
 
 for app in "${apps_to_open[@]}"; do
