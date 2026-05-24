@@ -327,7 +327,9 @@ for app in "${privileged_apps[@]}"; do
   brew_install_if_missing "$app"
 done
 
-killall "Shutter Encoder" 2>/dev/null || true
+mas install 310633997 #Whatsapp Messenger is also priviledged
+
+osascript -e 'quit app "Shutter Encoder"' 2>/dev/null || true
 # ----------------------------------------
 # Install Rosetta (for Apple Silicon)
 # ----------------------------------------
@@ -345,7 +347,10 @@ fi
 # ----------------------------------------
 echo "Installing custom apps and fonts..."
 
-custom_casks=(
+brew_apps=(
+
+#Custom Brew Casks
+
   adobe-activation-tool
   topaz-video-enhance-ai
   cleanmymacx
@@ -378,20 +383,9 @@ custom_casks=(
   vencord-installer
   zxp-installer
   compacta
-)
+  
+# Normal Brew Apps
 
-for cask in "${custom_casks[@]}"; do
-  echo "Installing $cask..."
-  brew_install_if_missing "$cask"
-done 
-
-
-# ----------------------------------------
-# Install Normal Apps
-# ----------------------------------------
-echo "Installing normal apps..."
-
-normal_apps=(
   lookaway
   nvidia-geforce-now
   finetune
@@ -433,13 +427,25 @@ normal_apps=(
   mkvtoolnix
   macusb
   codeforreal1/tap/compresso
+
+# Normal Fonts
+
+  font-baloo-2
+  font-bebas-neue
+  font-beau-rivage
+  font-courgette
+  font-courier-new
+  font-courier-prime
+  font-courier-prime-code
+  font-nunito
+  font-comfortaa
 )
 
-for app in "${normal_apps[@]}"; do
-  echo "Installing $app..."
+for cask in "${brew_apps[@]}"; do
+  echo "Installing $cask..."
+  brew_install_if_missing "$cask"
+done 
 
-  brew_install_if_missing "$app"
-done
 # ----------------------------------------
 # Install Fonts
 # ----------------------------------------
@@ -461,13 +467,10 @@ for font in "${fonts[@]}"; do
   brew_install_if_missing "$font"
 done
 
-echo ""
-echo "======================================="
-echo "Installing Mac App Store apps via mas"
-echo "======================================="
+
+echo "Installing Mac App Store apps..."
 
 mas_apps=(
-  310633997  # WhatsApp Messenger
   6698876601 # Folder Preview
   6745342698 # Ublock Origin Lite
   1592917505 # Noir - Dark Mode for Safari
@@ -480,13 +483,21 @@ mas_apps=(
   462062816  # Microsoft PowerPoint
   823766827  # OneDrive
   985367838  # Microsoft Outlook
-  
+  # Whatsapp has been moved to top because it requires admin
 )
 
 for app_id in "${mas_apps[@]}"; do
     echo "Installing MAS app $app_id..."
     mas_install_if_missing "$app_id"
   done
+
+# ----------------------------------------
+# Install Spicetify
+# ----------------------------------------
+
+
+
+  
 # ----------------------------------------
 # Download Personal Config Files
 # ----------------------------------------
