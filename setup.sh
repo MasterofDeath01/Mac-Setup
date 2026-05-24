@@ -45,31 +45,16 @@ brew_tap_if_missing() {
 defaults_write_if_needed() {
   local domain="$1"
   local key="$2"
-  local type="$3"
-  local value="${4:-__NO_VALUE__}"
+  shift 2
 
   local current
-  current=$(defaults read "$domain" "$key" 2>/dev/null || echo "__MISSING__")
+  current=$(defaults read "$domain" "$key" 2>/dev/null || true)
 
-  if [[ "$value" == "__NO_VALUE__" ]]; then
-    # handles -array, -dict, etc.
-    if [[ "$current" == "0" || "$current" == "1" ]]; then
-      current="__BOOL__"
-    fi
-
-    if [[ "$current" == "__MISSING__" ]]; then
-      echo "Updated $domain $key"
-      defaults write "$domain" "$key" $type
-    else
-      echo "$domain $key already set."
-    fi
+  if [[ "$current" == "$*" ]]; then
+    echo "$domain $key already set."
   else
-    if [[ "$current" == "$value" ]]; then
-      echo "$domain $key already set."
-    else
-      defaults write "$domain" "$key" $type "$value"
-      echo "Updated $domain $key"
-    fi
+    defaults write "$domain" "$key" "$@"
+    echo "Updated $domain $key"
   fi
 }
 
@@ -234,9 +219,7 @@ defaults_write_if_needed com.apple.dock autohide-delay -int 0
 defaults_write_if_needed com.apple.dock autohide-time-modifier -float 0.5
 
 # Remove all apps from dock
-defaults_write_if_needed com.apple.dock persistent-apps -array-add '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/Applications/Safari.app</string><key>_CFURLFileType</key><integer>0</integer></dict></dict></dict>'
-defaults_write_if_needed delete com.apple.dock persistent-apps
-
+defaults_write_if_needed com.apple.dock persistent-apps -array
 
 # Disable "Show suggested and recent apps in Dock"
 defaults_write_if_needed com.apple.dock show-recents -bool false
