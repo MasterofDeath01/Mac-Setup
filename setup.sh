@@ -479,7 +479,14 @@ open /Applications/Spotify.app 2>/dev/null || true
 
 echo "Sign in to Spotify and wait 60s"...
 
-sleep 180
+# 120-Second Wait with Progress Bar
+echo -n "Waiting... "
+for i in {1..120}; do
+    printf "▓"
+    sleep 1
+done
+echo " Done!"
+
 
 spicetify config spotify_path "/Applications/Spotify.app/Contents/Resources"
 spicetify update
