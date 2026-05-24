@@ -67,7 +67,7 @@ defaults_write_if_needed() {
   if [[ "$current" == "$value" ]]; then
     echo "$domain $key already set."
   else
-    defaults_write_if_needed "$domain" "$key" "$type" "$value"
+    defaults write "$domain" "$key" "$type" "$value"
     echo "Updated $domain $key"
   fi
 }
