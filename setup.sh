@@ -521,6 +521,7 @@ apps_to_open=(
   "Folder Preview"
   "Raycast"
   "Middle"
+  "Surfshark"
 
   #Apps for Dock
   "Safari"
