@@ -49,7 +49,7 @@ defaults_write_if_needed() {
   local value="${4:-}"
 
   if [[ -z "$domain" || -z "$key" || -z "$type" || -z "$value" ]]; then
-    echo "ERROR: defaults_write_if_needed requires 4 args: domain key type value"
+    echo "ERROR: defaults write requires 4 args: domain key type value"
     echo "Got: $*"
     return 1
   fi
