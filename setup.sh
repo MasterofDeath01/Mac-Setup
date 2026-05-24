@@ -473,31 +473,6 @@ for app_id in "${mas_apps[@]}"; do
   done
 
 # ----------------------------------------
-# Install Spicetify
-# ----------------------------------------
-open /Applications/Spotify.app 2>/dev/null || true
-
-echo "Sign in to Spotify and wait 60s"...
-
-# 120-Second Wait with Progress Bar
-echo -n "Waiting... "
-for i in {1..120}; do
-    printf "▓"
-    sleep 1
-done
-echo " Done!"
-
-
-spicetify config spotify_path "/Applications/Spotify.app/Contents/Resources"
-spicetify update
-spicetify apply
-if [[ ! -d "$HOME/.spicetify/CustomApps/spicetify-marketplace" ]]; then
-  curl -fsSL https://raw.githubusercontent.com/spicetify/marketplace/main/resources/install.sh | sh
-fi
-spicetify apply
-
-  
-# ----------------------------------------
 # Download Personal Config Files
 # ----------------------------------------
 
