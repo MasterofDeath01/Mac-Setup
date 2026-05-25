@@ -426,7 +426,6 @@ brew_apps=(
   clipgrab
   middle
   adobe-creative-cloud-cleaner-tool
-  spotify
   spicetify-cli
   audacity
   keka
@@ -471,6 +470,26 @@ for cask in "${brew_apps[@]}"; do
   echo "Installing $cask..."
   brew_install_if_missing "$cask"
 done 
+
+
+# ----------------------------------------
+# Spotify Download
+# ----------------------------------------
+
+# Download it to Downloads folder
+curl -L -o ~/Downloads/"Old Spotify.dmg" https://dw.uptodown.net/dwn/z9U9D54Yj1GOW6Zazw7i_nMbU7ahPaw9_2em1WD4RHCI8ywn8gbibFHVOLGhuz3GpiAZJ_pJZ3t1ibABxePqJZeBh0235DSpmSoX1E_7dBu3EvwH9gLRCSx25P-GhbZP/fJq6PbMcfLXVQgvVl65rAuD-upWlYnJvzQ1QGhTkd6z-yGA_oU1gGqYVoBEDFGErjNyfK4_rIBt8UdiVDTEKW3VRIQdrlVPyObcGa3jrQIkPovoAVIXs_cKW3x39vlXQ/3N48k-JioJxJO8b6vfNIagnTNdXmpODUr-12qc51V4dF5qBmEpL-aWVxO5QVaSghCkgvSQ5d2uVuLJgG38Klwg==/spotify-1-2-61-443.dmg
+
+# 1. Mount the DMG file
+hdiutil attach ~/Downloads/"Old Spotify.dmg"
+
+# 2. Copy Spotify to your Applications folder
+cp -R /Volumes/Spotify/Spotify.app /Applications/
+
+# 3. Unmount the DMG file
+hdiutil detach /Volumes/Spotify/
+
+
+
 
 # ----------------------------------------
 # Download Personal Config Files
