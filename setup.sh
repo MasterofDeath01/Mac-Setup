@@ -476,20 +476,40 @@ done
 # Spotify Download
 # ----------------------------------------
 
-# Download it to Downloads folder
+spicetify update
+
 curl -L -o ~/Downloads/"Old Spotify.dmg" https://dw.uptodown.net/dwn/z9U9D54Yj1GOW6Zazw7i_nMbU7ahPaw9_2em1WD4RHCI8ywn8gbibFHVOLGhuz3GpiAZJ_pJZ3t1ibABxePqJZeBh0235DSpmSoX1E_7dBu3EvwH9gLRCSx25P-GhbZP/fJq6PbMcfLXVQgvVl65rAuD-upWlYnJvzQ1QGhTkd6z-yGA_oU1gGqYVoBEDFGErjNyfK4_rIBt8UdiVDTEKW3VRIQdrlVPyObcGa3jrQIkPovoAVIXs_cKW3x39vlXQ/3N48k-JioJxJO8b6vfNIagnTNdXmpODUr-12qc51V4dF5qBmEpL-aWVxO5QVaSghCkgvSQ5d2uVuLJgG38Klwg==/spotify-1-2-61-443.dmg
 
-# 1. Mount the DMG file
+sleep 2
+
 hdiutil attach ~/Downloads/"Old Spotify.dmg"
-
-# 2. Copy Spotify to your Applications folder
 cp -R /Volumes/Spotify/Spotify.app /Applications/
-
-# 3. Unmount the DMG file
 hdiutil detach /Volumes/Spotify/
 
+sleep 2
 
+chflags uchg /Applications/Spotify.app/Contents/MacOS/Spotify
 
+open -a spotify
+
+echo "Log into your spotify account..."
+
+sleep 180
+
+curl -L \
+  -o "~/.config/spicetify/Extensions" \
+  "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/adblock.js"
+
+curl -L \
+  -o "~/.config/spicetify/Extensions" \
+  "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/loopyLoop.js"
+
+sleep 2
+
+spicetify config adblock.js
+spicetify config loopyLoop.js
+spicetify backup apply
+spicetify apply
 
 # ----------------------------------------
 # Download Personal Config Files
