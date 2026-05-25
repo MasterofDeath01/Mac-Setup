@@ -476,15 +476,17 @@ done
 # Spotify Download
 # ----------------------------------------
 
+
 spicetify update
 
-curl -L -o ~/Downloads/"Old Spotify.dmg" https://dw.uptodown.net/dwn/z9U9D54Yj1GOW6Zazw7i_nMbU7ahPaw9_2em1WD4RHCI8ywn8gbibFHVOLGhuz3GpiAZJ_pJZ3t1ibABxePqJZeBh0235DSpmSoX1E_7dBu3EvwH9gLRCSx25P-GhbZP/fJq6PbMcfLXVQgvVl65rAuD-upWlYnJvzQ1QGhTkd6z-yGA_oU1gGqYVoBEDFGErjNyfK4_rIBt8UdiVDTEKW3VRIQdrlVPyObcGa3jrQIkPovoAVIXs_cKW3x39vlXQ/3N48k-JioJxJO8b6vfNIagnTNdXmpODUr-12qc51V4dF5qBmEpL-aWVxO5QVaSghCkgvSQ5d2uVuLJgG38Klwg==/spotify-1-2-61-443.dmg
+curl -L -o "Old Spotify.dmg" https://dw.uptodown.net/dwn/z9U9D54Yj1GOW6Zazw7i_nMbU7ahPaw9_2em1WD4RHCI8ywn8gbibFHVOLGhuz3GpiAZJ_pJZ3t1ibABxePqJZeBh0235DSpmSoX1E_7dBu3EvwH9gLRCSx25P-GhbZP/fJq6PbMcfLXVQgvVl65rAuD-upWlYnJvzQ1QGhTkd6z-yGA_oU1gGqYVoBEDFGErjNyfK4_rIBt8UdiVDTEKW3VRIQdrlVPyObcGa3jrQIkPovoAVIXs_cKW3x39vlXQ/3N48k-JioJxJO8b6vfNIagnTNdXmpODUr-12qc51V4dF5qBmEpL-aWVxO5QVaSghCkgvSQ5d2uVuLJgG38Klwg==/spotify-1-2-61-443.dmg
 
 sleep 2
 
-hdiutil attach ~/Downloads/"Old Spotify.dmg"
+hdiutil attach "Old Spotify.dmg"
 cp -R /Volumes/Spotify/Spotify.app /Applications/
 hdiutil detach /Volumes/Spotify/
+rm "Old Spotify.dmg"
 
 sleep 2
 
@@ -497,11 +499,11 @@ echo "Log into your spotify account..."
 sleep 180
 
 curl -L \
-  -o "~/.config/spicetify/Extensions" \
+  -o "$HOME/.config/spicetify/Extensions" \
   "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/adblock.js"
 
 curl -L \
-  -o "~/.config/spicetify/Extensions" \
+  -o "$HOME/.config/spicetify/Extensions" \
   "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/loopyLoop.js"
 
 sleep 2
@@ -515,9 +517,8 @@ spicetify apply
 # Download Personal Config Files
 # ----------------------------------------
 
-echo "Downloading personal config files..."
-
 DOWNLOADS_DIR="$HOME/Downloads"
+echo "Downloading personal config files..."
 
 mkdir -p "$DOWNLOADS_DIR"
 
