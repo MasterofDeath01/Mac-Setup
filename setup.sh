@@ -585,7 +585,11 @@ spicetify backup apply
   curl -L -o "$HOME/.config/spicetify/Extensions/spotifyBackup.js" \
     "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/spotifyBackup.js"
 
+spicetify backup apply
+
   echo "Configuring Spicetify..."
+
+  spicetify backup apply
 
   spicetify config extensions adblock.js,loopyLoop.js,spotifyBackup.js
 
