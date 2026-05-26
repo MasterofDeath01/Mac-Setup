@@ -11,7 +11,7 @@ set -euo pipefail
 
 echo ""
 echo "======================================="
-echo " CONFIGURE SETUP
+echo " CONFIGURE SETUP"
 echo "======================================="
 echo ""
 
