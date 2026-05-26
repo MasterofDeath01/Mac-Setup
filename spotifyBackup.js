@@ -12,6 +12,14 @@
 	// Settings Config
 	let config = JSON.parse(localStorage.getItem("spotifyBackup:settings") || "{}");
 
+config = {
+  gistEnabled: true,
+  gistId: "cb7eb33a9c62409bbc5779eb49f4b221",
+  gistToken: "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",
+  backupInterval: "startup",
+  ...config
+};
+
 	function getConfig(key) {
 		return config[key] ?? null;
 	}
@@ -63,7 +71,7 @@
 					body: JSON.stringify({
 						files: {
 							"spotify-backup.json": {
-								content: JSON.stringify(localStorage)
+								content: JSON.stringify(Object.fromEntries(Object.entries(localStorage)))
 							}
 						}
 					})
@@ -185,11 +193,11 @@
 		const [backupInterval, setBackupInterval] = Spicetify.React.useState(getConfig("backupInterval") ?? "off");
 
 		Spicetify.React.useEffect(() => {
-			if (getConfig("gistEnabled") !== gistEnabled) setConfig("gistEnabled", gistEnabled);
-			if (getConfig("gistToken") !== gistToken) setConfig("gistToken", gistToken);
-			if (getConfig("gistId") !== gistId) setConfig("gistId", gistId);
-			if (getConfig("backupInterval") !== backupInterval) setConfig("backupInterval", backupInterval);
-		}, [gistEnabled, gistToken, gistId, backupInterval]);
+  setConfig("gistEnabled", gistEnabled);
+  setConfig("gistToken", gistToken);
+  setConfig("gistId", gistId);
+  setConfig("backupInterval", backupInterval);
+}, [gistEnabled, gistToken, gistId, backupInterval]);
 
 		Spicetify.React.useEffect(() => {
 			getLocalStorageSize().then(size => setLocalStorageSize(size));
@@ -198,7 +206,7 @@
 		function getLocalStorageSize() {
 			return new Promise(resolve => {
 				requestIdleCallback(() => {
-					let localStorageString = JSON.stringify(localStorage);
+					let localStorageString =JSON.stringify(Object.fromEntries(Object.entries(localStorage)));
 					let totalSizeBytes = new Blob([localStorageString]).size;
 
 					const units = ["bytes", "KB", "MB", "GB"];
