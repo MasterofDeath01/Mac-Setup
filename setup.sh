@@ -509,8 +509,6 @@ curl -L \
   -o "$HOME/.config/spicetify/Extensions" \
   "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/spotifyBackup.js"
 
-sleep 2
-
 cat << 'EOF' > "$(dirname "$(spicetify -c)")/Extensions/setupGist.js"
 (function() {
     localStorage.setItem('spotifyBackup:token', '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');
@@ -520,10 +518,15 @@ cat << 'EOF' > "$(dirname "$(spicetify -c)")/Extensions/setupGist.js"
 })();
 EOF
 
+spicetify config extensions setupGist.js
 spicetify config extensions adblock.js
 spicetify config extensions loopyLoop.js
 spicetify config extensions spotifyBackup.js
 spicetify backup apply
+spicetify apply
+
+rm "$HOME/.config/spicetify/Extensions/setupGist.js"
+
 spicetify apply
 
 # ----------------------------------------
