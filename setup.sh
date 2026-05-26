@@ -15,7 +15,7 @@
 config = {
   gistEnabled: true,
   gistId: "cb7eb33a9c62409bbc5779eb49f4b221",
-  gistToken: "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",
+  gistToken: "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",
   backupInterval: "startup",
   ...config
 };
