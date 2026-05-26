@@ -546,22 +546,17 @@ if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
   echo "Installing Spicetify CLI (if needed)..."
 
   if ! command -v spicetify >/dev/null 2>&1; then
-    brew install spicetify-cli
+    brew_install_if_missing spicetify-cli
   else
     echo "Spicetify already installed."
   fi
 
   echo "Installing legacy Spotify..."
 
-  SPOTIFY_DMG="$HOME/OldSpotify.dmg"
+ brew_install_if_missing legacy_spotify
 
-  curl -L -o "$SPOTIFY_DMG" "https://dw.uptodown.net/dwn/z9U9D54Yj1GOW6Zazw7i_nMbU7ahPaw9_2em1WD4RHCI8ywn8gbibFHVOLGhuz3GpiAZJ_pJZ3t1ibABxePqJZeBh0235DSpmSoX1E_7dBu3EvwH9gLRCSx25P-GhbZP/fJq6PbMcfLXVQgvVl65rAuD-upWlYnJvzQ1QGhTkd6z-yGA_oU1gGqYVoBEDFGErjNyfK4_rIBt8UdiVDTEKW3VRIQdrlVPyObcGa3jrQIkPovoAVIXs_cKW3x39vlXQ/3N48k-JioJxJO8b6vfNIagnTNdXmpODUr-12qc51V4dF5qBmEpL-aWVxO5QVaSghCkgvSQ5d2uVuLJgG38Klwg==/spotify-1-2-61-443.dmg"
-
-  hdiutil attach "$SPOTIFY_DMG"
-  cp -R /Volumes/Spotify/Spotify.app /Applications/
-  hdiutil detach /Volumes/Spotify/
-  rm "$SPOTIFY_DMG"
-
+chflags uchg /Applications/Spotify.app/Contents/MacOS/Spotify
+  
   echo "Launching Spotify for first login..."
   open -a "Spotify"
   read -rp "Log into Spotify fully, then press Enter..."
