@@ -560,12 +560,11 @@ chflags uchg /Applications/Spotify.app/Contents/MacOS/Spotify || true
   open -a "Spotify"
   read -rp "Log into Spotify fully, then press ENTER/RETURN..."
 
-
-spicetify backup apply
-
   echo "Setting Spicetify Spotify path..."
 
-  spicetify config spotify_path "/Applications/Spotify.app"
+  spicetify config spotify_path "~/Applications/Spotify.app"
+  spicetify backup apply
+  spicetify apply
 
   echo "Installing Spotify Marketplace..."
 
@@ -584,11 +583,7 @@ spicetify backup apply
   curl -L -o "$HOME/.config/spicetify/Extensions/spotifyBackup.js" \
     "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/spotifyBackup.js"
 
-spicetify backup apply
-
   echo "Configuring Spicetify..."
-
-  spicetify backup apply
 
   spicetify config extensions adblock.js,loopyLoop.js,spotifyBackup.js
 
