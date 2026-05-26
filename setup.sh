@@ -1,684 +1,458 @@
-#!/bin/bash
-set -euo pipefail
-
-# ----------------------------------------
-# Helpers (idempotency utilities)
-# ----------------------------------------
-echo ""
-
-brew_install_if_missing() {
-  local name="$1"
-
-  if brew list --formula "$name" >/dev/null 2>&1 || \
-     brew list --cask "$name" >/dev/null 2>&1; then
-    echo "$name already installed, skipping."
-    return 0
-  fi
-
-  if brew install --cask "$name" 2>/dev/null; then
-    echo "Installed cask: $name"
-  elif brew install "$name" 2>/dev/null; then
-    echo "Installed formula: $name"
-  else
-    echo "Failed to install $name"
-  fi
-}
-
-mas_install_if_missing() {
-  local id="$1"
-  local name="${2:-$id}"
-
-  if mas list | grep -q "^$id "; then
-    echo "$name already installed, skipping."
-  else
-    mas install "$id" || echo "Failed to install $name"
-  fi
-}
-
-defaults_write_if_needed() {
-  local domain="$1"
-  local key="$2"
-  shift 2
-
-  local current
-  current=$(defaults read "$domain" "$key" 2>/dev/null || true)
-
-  if [[ "$current" == "$*" ]]; then
-    echo "$domain $key already set."
-  else
-    defaults write "$domain" "$key" "$@"
-    echo "Updated $domain $key"
-  fi
-}
-
-require_full_disk_access() {
-  echo "Checking Full Disk Access..."
-  local tcc_db="$HOME/Library/Application Support/com.apple.TCC/TCC.db"
-  if ! sqlite3 "$tcc_db" ".tables" >/dev/null 2>&1; then
-    osascript <<EOF
-display dialog "Terminal needs Full Disk Access.\n\nEnable it in:\nSystem Settings → Privacy & Security → Full Disk Access\n\nThen FULLY QUIT Terminal and re-run the script." buttons {"Open Settings"} default button 1 with icon caution
-EOF
-    open "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
-  sleep 1
-    osascript -e 'tell application "Terminal" to quit'
-
-exit 1
-  fi
-  echo "Full Disk Access confirmed."
-}
-
-# ----------------------------------------
-# Permissions
-# ----------------------------------------
-require_full_disk_access
-open / 2>/dev/null || true
-osascript -e 'tell application "Finder" to get name of front window' -e 'tell application "System Events" to get name of current user'
-
-# ----------------------------------------
-# Enable Touch ID for sudo
-# ----------------------------------------
-
-PAM_SUDO_FILE="/etc/pam.d/sudo"
-
-if ! grep -q "pam_tid.so" "$PAM_SUDO_FILE"; then
-  echo "Enabling Touch ID for sudo..."
-
-  sudo cp "$PAM_SUDO_FILE" "${PAM_SUDO_FILE}.bak"
-
-  if ! grep -q "pam_tid.so" "$PAM_SUDO_FILE"; then
-    echo "auth       sufficient     pam_tid.so" | sudo cat - "$PAM_SUDO_FILE" > /tmp/pam_sudo
-    sudo mv /tmp/pam_sudo "$PAM_SUDO_FILE"
-  fi
-
-  echo "Touch ID enabled."
-else
-  echo "Touch ID already enabled."
-fi
-
-# ----------------------------------------
-# Configure Setup
-# ----------------------------------------
-
-echo ""
-echo "======================================="
-echo " CONFIGURE SETUP"
-echo "======================================="
-echo ""
-
-ask_yes_no() {
-  local prompt="$1"
-  local reply
-
-  read -rp "$prompt [y/n]: " reply
-
-  [[ "$reply" =~ ^[Yy]$ ]]
-}
-
-if ask_yes_no "Configure macOS Settings?" "N"; then
-  CONFIGURE_MACOS_SETTINGS=true
-else
-  CONFIGURE_MACOS_SETTINGS=false
-fi
-
-if ask_yes_no "Install Homebrew apps?" "Y"; then
-  INSTALL_BREW_APPS=true
-else
-  INSTALL_BREW_APPS=false
-fi
-
-if ask_yes_no "Install Mac App Store apps?" "Y"; then
-  INSTALL_MAS_APPS=true
-else
-  INSTALL_MAS_APPS=false
-fi
-
-if ask_yes_no "Run Spotify setup?" "Y"; then
-  RUN_SPOTIFY_SETUP=true
-else
-  RUN_SPOTIFY_SETUP=false
-fi
-
-if ask_yes_no "Launch apps at end of setup?" "Y"; then
-  LAUNCH_APPS=true
-else
-  LAUNCH_APPS=false
-fi
-
-# -----------------------------
-# CONFIGURING SETTINGS
-# -----------------------------
-
-if [[ "$CONFIGURE_MACOS_SETTINGS" == true ]]; then
-
-# ----------------------------------------
-# Open Settings Panes
-# ----------------------------------------
-
-echo "Please configure the following in System Settings:"
-echo "- Screenshot shortcuts"
-echo "- Control Center"
-echo "- Desktop & Dock"
-echo "- Wallpaper"
-
-open "x-apple.systempreferences:"
-
-# -----------------------------
-# Screenshot Directory Change
-# -----------------------------
-
-echo ""
-echo "Configuring screenshot save location..."
-
-# Create the folder for screenshots (if not already there)
-mkdir -p "$HOME/Pictures/Screenshots"
-
-# Set screenshot save location
-defaults_write_if_needed com.apple.screencapture location -string "$HOME/Pictures/Screenshots" 
-
-echo "Screenshot save location set to ~/Pictures/Screenshots."
-
-# -----------------------------
-# Finder Settings
-# -----------------------------
-echo "Configuring Finder preferences..."
-
-# Show all filename extensions
-defaults_write_if_needed NSGlobalDomain AppleShowAllExtensions -bool true
-
-# Set Finder search to current folder by default
-defaults_write_if_needed com.apple.finder FXDefaultSearchScope -string "SCcf"
-
-# Set new Finder windows to open Downloads folder
-defaults_write_if_needed com.apple.finder NewWindowTarget -string "PfLo"
-defaults_write_if_needed com.apple.finder NewWindowTargetPath -string "file://${HOME}/Downloads/"
-
-#Show Path and Status Bar
-defaults_write_if_needed com.apple.finder ShowPathbar -bool true
-defaults_write_if_needed com.apple.finder ShowStatusBar -bool true
-
-#Calculate Folder Sizes
-defaults_write_if_needed com.apple.finder FXCalculateAllSizes -bool true
-
-#Refresh .DS_Store
-  echo "Refreshing .DS_Store Files — this may take a while..."
-
-  find "$HOME" \
-    -path "$HOME/Library" -prune -o \
-    -name ".DS_Store" -type f -delete 2>/dev/null
-
-  echo ".DS_Store refresh complete."
-
-echo "Finder settings configured"
-
-# -----------------------------
-# TextEdit Preferences
-# -----------------------------
-
-echo "Configuring TextEdit..."
-
-# Force plain text mode
-defaults_write_if_needed com.apple.TextEdit RichText -bool false
-
-# Encoding
-defaults_write_if_needed com.apple.TextEdit PlainTextEncoding -int 4
-defaults_write_if_needed com.apple.TextEdit PlainTextEncodingForWrite -int 4
-
-# Global smart text rules
-defaults_write_if_needed NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
-defaults_write_if_needed NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
-
-# Disable iCloud new document default
-defaults_write_if_needed NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
-
-echo "TextEdit preferences configured."
-
-# -----------------------------
-# Dock Settings
-# -----------------------------
-echo "Configuring Dock settings..."
-
-# Enable magnification
-defaults_write_if_needed com.apple.dock magnification -bool true
-defaults_write_if_needed com.apple.dock largesize -int 64
-
-# Enable auto-hide
-defaults_write_if_needed com.apple.dock autohide -bool true
-
-# Make Dock Faster
-defaults_write_if_needed com.apple.dock autohide-delay -int 0
-defaults_write_if_needed com.apple.dock autohide-time-modifier -float 0.5
-
-# Remove all apps from dock
-defaults_write_if_needed com.apple.dock persistent-apps -array
-
-# Disable "Show suggested and recent apps in Dock"
-defaults_write_if_needed com.apple.dock show-recents -bool false
-
-# Disable Mission Control & App Expose
-defaults_write_if_needed com.apple.dock showMissionControlGestureEnabled -bool false
-defaults_write_if_needed com.apple.dock showAppExposeGestureEnabled -bool false
-
-echo "Dock settings applied."
-
-# -----------------------------
-# Change Spelling Settings
-# -----------------------------
-
-echo "Changing Spelling Settings..."
-
-# Disable automatic spelling correction
-defaults_write_if_needed NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
-
-# Disable autocapitalization
-defaults_write_if_needed NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
-
-# Disable smart quotes and dashes
-defaults_write_if_needed NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
-defaults_write_if_needed NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
-
-echo "Autocorrect, spelling correction, and capitalization disabled."
-
-echo ""
-echo "Spelling Settings applied."
-
-# -----------------------------
-# Miscellaneous Settings
-# -----------------------------
-defaults_write_if_needed com.apple.controlcenter BatteryShowPercentage -bool true
-defaults_write_if_needed com.apple.loginwindow TALLogoutSavesState -bool false
-defaults_write_if_needed com.apple.coreservices.uiagent CSUIShowCloudSetupDialogs -bool false
-defaults_write_if_needed NSGlobalDomain NSWindowResizeTime -float 0.001
-defaults_write_if_needed NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
-defaults_write_if_needed NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 -bool true
-
-# -----------------------------
-# Apply settings
-# -----------------------------
-killall Dock 2>/dev/null || true
-killall Finder 2>/dev/null || true
-killall ControlCenter 2>/dev/null || true
-killall SystemUIServer 2>/dev/null || true
-killall TextEdit 2>/dev/null || true
-killall cfprefsd 2>/dev/null || true
-
-echo "All settings applied!"
-
-else
-echo "Skipping MacOS settings configuration..."
-fi
-
-# ----------------------------------------
-# Install Homebrew if not present
-# ----------------------------------------
-if command -v brew >/dev/null 2>&1; then
-  echo "Homebrew already installed."
-else
-  echo "Installing Homebrew..."
- /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-fi
-
-SHELL_NAME=$(basename "$SHELL")
-APPLE_SILICON="/opt/homebrew"
-INTEL="/usr/local"
-
-if [[ -d "$APPLE_SILICON" ]]; then
-  BREW_PREFIX="$APPLE_SILICON"
-else
-  BREW_PREFIX="$INTEL"
-fi
-
-case "$SHELL_NAME" in
-  zsh) PROFILE="$HOME/.zshrc" ;;
-  bash) PROFILE="$HOME/.bash_profile" ;;
-  *) PROFILE="$HOME/.profile" ;;
-esac
-
-echo ""
-echo "Configuring Homebrew PATH in $PROFILE"
-
-if ! grep -q "brew shellenv" "$PROFILE" 2>/dev/null; then
-  {
-    echo ""
-    echo "# Homebrew"
-    echo "eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
-  } >> "$PROFILE"
-  echo "PATH updated."
-else
-  echo "PATH already configured."
-fi
-
-# Load Homebrew for this session
-eval "$($BREW_PREFIX/bin/brew shellenv)"
-
-brew update
-
-echo ""
-echo "======================================="
-echo " Homebrew installation complete!"
-echo "======================================="
-echo ""
-
-brew tap "MasterofDeath01/apps"
-
-# ----------------------------------------
-# Install Privileged Apps FIRST
-# ----------------------------------------
-
-privileged_apps=(
-  auto-subs
-  blackhole-2ch
-  microsoft-teams
-  mas
-  shutter-encoder
-)
-if [[ "$INSTALL_BREW_APPS" == true ]]; then
-echo "Installing privileged apps..."
-  for app in "${privileged_apps[@]}"; do
-    echo "Installing $app..."
-    brew_install_if_missing "$app"
-  done
-else
-  echo "Skipping priviledged apps install..."
-fi
-sleep 2
-
-osascript -e 'quit app "Shutter Encoder"' 2>/dev/null || true
-
-mas_apps=(
-  6745342698 # Ublock Origin Lite
-  310633997 #Whatsapp Messenger
-  6698876601 # Folder Preview
-  1592917505 # Noir - Dark Mode for Safari
-  510620098  # MediaInfo
-  1448916662 # Step Two
-  1355679052 # Dropover
-  784801555  # Microsoft OneNote
-  462054704  # Microsoft Word
-  462058435  # Microsoft Excel
-  462062816  # Microsoft PowerPoint
-  823766827  # OneDrive
-  985367838  # Microsoft Outlook
-  # Whatsapp has been moved to top because it requires admin
-)
-
-if [[ "$INSTALL_MAS_APPS" == true ]]; then
-
-  echo "Installing Mac App Store apps..."
-
-  for app_id in "${mas_apps[@]}"; do
-    echo "Installing MAS app $app_id..."
-    mas_install_if_missing "$app_id"
-  done
-
-else
-  echo "Skipping Mac App Store installs."
-fi
-
-# ----------------------------------------
-# Install Rosetta (for Apple Silicon)
-# ----------------------------------------
-if [[ "$(uname -m)" == "arm64" ]]; then
-  if ! /usr/bin/pgrep oahd >/dev/null 2>&1; then
-    echo "Installing Rosetta..."
-    softwareupdate --install-rosetta --agree-to-license
-  else
-    echo "Rosetta already installed."
-  fi
-fi
-
-# ----------------------------------------
-# Install custom apps & fonts
-# ----------------------------------------
-
-brew_apps=(
-
-#Custom Brew Casks
-
-  adobe-activation-tool
-  topaz-video-enhance-ai
-  cleanmymacx
-  adobe-downloader
-  altone-trial-bold-oblique
-  altone-trial-bold
-  altone-trial-oblique
-  altone-trial-regular
-  charlie-dont-surf
-  daughter-of-fortune
-  designer
-  harry-p
-  iron-man-of-war
-  kromika-axis
-  lemonmilk-bold-italic
-  lemonmilk-bold
-  lemonmilk-light-italic
-  lemonmilk-light
-  lemonmilk-medium-italic
-  lemonmilk-medium
-  lemonmilk-regular-italic
-  lemonmilk-regular
-  luminance-smallcaps
-  pieces-of-eight
-  signatra
-  sylfaen
-  utsaah
-  the-amazing-spider-man
-  mister-horse-product-manager
-  vencord-installer
-  zxp-installer
-  compacta
-  
-# Normal Brew Apps
-
-  lookaway
-  nvidia-geforce-now
-  finetune
-  impactor
-  onyx
-  chatgpt
-  surfshark
-  raycast
-  betterdisplay
-  modrinth
-  google-chrome
-  mediamate
-  clipgrab
-  middle
-  adobe-creative-cloud-cleaner-tool
-  spicetify-cli
-  audacity
-  keka
-  discord
-  blender
-  calibre
-  claude
-  firefox
-  handbrake
-  vlc
-  iina
-  visual-studio-code
-  krita
-  pinta
-  macs-fan-control
-  appcleaner
-  upscayl
-  latest
-  mos
-  keyboardcleantool
-  roblox
-  capcut
-  imageoptim
-  mkvtoolnix
-  macusb
-  codeforreal1/tap/compresso
-
-# Normal Fonts
-
-  font-baloo-2
-  font-bebas-neue
-  font-beau-rivage
-  font-courgette
-  font-courier-new
-  font-courier-prime
-  font-courier-prime-code
-  font-nunito
-  font-comfortaa
-)
-
-if [[ "$INSTALL_BREW_APPS" == true ]]; then
-
-  echo "Installing custom apps and fonts..."
-
-  for cask in "${brew_apps[@]}"; do
-    echo "Installing $cask..."
-    brew_install_if_missing "$cask"
-  done
-
-else
-  echo "Skipping Homebrew app installation."
-fi
-
-# ----------------------------------------
-# Spotify Setup
-# ----------------------------------------
-
-if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
-
-  if ! command -v spicetify >/dev/null 2>&1; then
-   echo "Installing Spicetify CLI..."
-    brew_install_if_missing spicetify-cli
-  else
-    echo "Spicetify already installed."
-  fi
-
-  echo "Installing legacy Spotify..."
-
- brew_install_if_missing legacy-spotify
-
-chflags uchg /Applications/Spotify.app/Contents/MacOS/Spotify || true
-  
-  echo "Launching Spotify for first login..."
-  open -a "Spotify"
-  read -rp "Log into Spotify fully, then press ENTER/RETURN..."
-
-  echo "Setting Spicetify Spotify path..."
-
-  spicetify config spotify_path "~/Applications/Spotify.app"
-  spicetify backup apply
-  spicetify apply
-
-  echo "Installing Spotify Marketplace..."
-
-  curl -fsSL https://raw.githubusercontent.com/spicetify/spicetify-marketplace/main/resources/install.sh | sh
-
-  echo "Installing extensions..."
-
-  mkdir -p "$HOME/.config/spicetify/Extensions"
-
-  curl -L -o "$HOME/.config/spicetify/Extensions/adblock.js" \
-    "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/adblock.js"
-
-  curl -L -o "$HOME/.config/spicetify/Extensions/loopyLoop.js" \
-    "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/loopyLoop.js"
-
-  curl -L -o "$HOME/.config/spicetify/Extensions/spotifyBackup.js" \
-    "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/spotifyBackup.js"
-
-  echo "Configuring Spicetify..."
-
-  spicetify config extensions adblock.js
-  spicetify config extensions loopyloop.js
-  spicetify config extensions spotifyBackup.js
-
-  echo "Applying Spicetify..."
-  spicetify apply
-
-  echo "Restarting Spotify..."
-
-  killall Spotify || true
-  open -a "Spotify"
-
-else
-  echo "Skipping Spotify setup."
-fi
-
-# ----------------------------------------
-# Download Personal Config Files
-# ----------------------------------------
-
-DOWNLOADS_DIR="$HOME/Downloads"
-echo "Downloading personal config files..."
-
-mkdir -p "$DOWNLOADS_DIR"
-
-curl -L \
-  -o "$DOWNLOADS_DIR/Raycast.rayconfig" \
-  "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/Raycast.rayconfig"
-
-SCRIPT_NAME="MasterofDeath's Editing Script.jsx"
-
-curl -L \
-  -o "$DOWNLOADS_DIR/$SCRIPT_NAME" \
-  "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/MasterofDeath%27s%20Editing%20Script.jsx"
-
-echo "Personal config files downloaded to Downloads."
-
-# ----------------------------------------
-# Xattr Apps
-# ----------------------------------------
-
-sudo xattr -cr /Applications/Mos.app
-sudo xattr -cr /Applications/'CleanMyMac X.app'
-sudo xattr -cr /Applications/'Topaz Video.app'
-sudo xattr -cr /Applications/'Adobe Downloader.app'
-sudo xattr -cr /Applications/Adobe\ Activation\ Tool.app
-
-# ----------------------------------------
-# Launch Installed Apps
-# ----------------------------------------
-
-echo ""
-echo "Opening selected apps..."
-
-apps_to_open=(
-  "LookAway"
-  "BetterDisplay"
-  "Mos"
-  "CleanMyMac X"
-  "OneDrive"
-  "MediaMate"
-  "Dropover"
-  "Macs Fan Control"
-  "Folder Preview"
-  "Raycast"
-  "Middle"
-  "Surfshark"
-
-  #Apps for Dock
-  "Safari"
-  "Modrinth App"
-  "Discord"
-  "WhatsApp"
-  "ChatGPT"
-)
-
-if [[ "$LAUNCH_APPS" == true ]]; then
-
-  echo "Opening selected apps..."
-
-  for app in "${apps_to_open[@]}"; do
-    echo "Opening $app..."
-    open -a "$app" 2>/dev/null || echo "$app not installed or failed to open"
-  done
-
-else
-  echo "Skipping app launch section."
-fi
-
-echo ""
-echo "======================================="
-echo " Setup complete!"
-echo "======================================="
-
-osascript -e 'tell app "System Events" to display dialog "Setup Complete!"'
-
-read -n 1 -s -r -p "Press any key to close…"
+// NAME: Spotify Backup
+// AUTHOR: OhItsTom
+// DESCRIPTION: Backup / restore application data (settings) + to the cloud (Gist).
+// TODO: also backup/parse prefs + productstate + simplify overall code
+
+(async function spotifyBackup() {
+	if (!(Spicetify.Platform && Spicetify.React && Spicetify.ReactDOM && Spicetify.Platform.History && Spicetify.Locale._dictionary)) {
+		setTimeout(spotifyBackup, 10);
+		return;
+	}
+
+	// Settings Config
+	let config = JSON.parse(localStorage.getItem("spotifyBackup:settings") || "{}");
+
+config = {
+  gistEnabled: true,
+  gistId: "cb7eb33a9c62409bbc5779eb49f4b221",
+  gistToken: "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",
+  backupInterval: "startup",
+  ...config
+};
+
+	function getConfig(key) {
+		return config[key] ?? null;
+	}
+
+	function setConfig(key, value, message) {
+		if (value !== getConfig(key)) {
+			console.debug(`[spotifyBackup-Config]: ${message ?? key + " ="}`, value);
+			config[key] = value;
+			localStorage.setItem("spotifyBackup:settings", JSON.stringify(config));
+		}
+	}
+
+	// Time related functions
+	function getCurrentTimestamp() {
+		return new Date().toISOString();
+	}
+
+	function timeSince(timestamp) {
+		return new Date() - new Date(timestamp);
+	}
+
+	function getLastBackupTimestamp() {
+		return getConfig("lastBackupTimestamp");
+	}
+
+	function setLastBackupTimestamp(timestamp) {
+		setConfig("lastBackupTimestamp", timestamp, "Last backup timestamp");
+	}
+
+	// Backup / Restore functions
+	async function performBackup() {
+		if (!getConfig("gistEnabled")) {
+			Spicetify.Platform.ClipboardAPI.copy(localStorage)
+				.then(() => {
+					Spicetify.showNotification("Backup Data Copied");
+					setLastBackupTimestamp(getCurrentTimestamp());
+				})
+				.catch(() => {
+					Spicetify.showNotification("Failed to backup data.", true);
+				});
+		} else {
+			try {
+				const response = await fetch(`https://api.github.com/gists/${getConfig("gistId")}`, {
+					method: "PATCH",
+					headers: {
+						Authorization: `token ${getConfig("gistToken")}`,
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({
+						files: {
+							"spotify-backup.json": {
+								content: JSON.stringify(Object.fromEntries(Object.entries(localStorage)))
+							}
+						}
+					})
+				});
+				if (response.ok) {
+					Spicetify.showNotification("Backup to Gist successful");
+					setLastBackupTimestamp(getCurrentTimestamp());
+				} else {
+					Spicetify.showNotification("Failed to backup to Gist", true);
+				}
+			} catch (error) {
+				Spicetify.showNotification("Failed to backup to Gist", true);
+			}
+		}
+	}
+
+	function checkAndPerformBackup() {
+		const backupInterval = getConfig("backupInterval");
+		if (backupInterval === "off" || !getConfig("gistEnabled")) return;
+
+		const lastBackupTimestamp = getLastBackupTimestamp();
+		const now = new Date();
+
+		if (backupInterval === "startup") {
+			performBackup();
+		} else if (backupInterval === "daily") {
+			if (!lastBackupTimestamp || timeSince(lastBackupTimestamp) > 24 * 60 * 60 * 1000) {
+				performBackup();
+			}
+		}
+	}
+
+	async function handleRestore() {
+		if (!getConfig("gistEnabled")) {
+			try {
+				let parsedBackupData = JSON.parse(await Spicetify.Platform.ClipboardAPI.paste());
+				restoreData(parsedBackupData);
+			} catch (error) {
+				Spicetify.showNotification("Failed to restore data from clipboard.", true);
+				console.error("Local restore failed:", error);
+			}
+		} else {
+			try {
+				const response = await fetch(`https://api.github.com/gists/${getConfig("gistId")}`, {
+					headers: {
+						Authorization: `token ${getConfig("gistToken")}`
+					}
+				});
+
+				if (response.ok) {
+					const data = await response.json();
+					const gistContent = data.files["spotify-backup.json"].content;
+					let parsedBackupData = JSON.parse(gistContent);
+					restoreData(parsedBackupData);
+					Spicetify.showNotification("Restore from Gist successful");
+				} else {
+					const errorText = await response.text();
+					console.error("Gist fetch failed:", response.status, errorText);
+					Spicetify.showNotification(`Gist error: ${response.status}`, true);
+				}
+			} catch (error) {
+				Spicetify.showNotification("Failed to restore from Gist", true);
+				console.error("Gist restore failed:", error);
+			}
+		}
+	}
+
+	function restoreData(parsedBackupData) {
+		try {
+			localStorage.clear();
+			for (let key in parsedBackupData) {
+				if (parsedBackupData.hasOwnProperty(key)) {
+					localStorage.setItem(key, parsedBackupData[key]);
+				}
+			}
+			Spicetify.showNotification("Data restored successfully");
+			window.location.reload();
+		} catch (error) {
+			Spicetify.showNotification("Failed to restore data.", true);
+			console.error("Error while restoring data:", error);
+		}
+	}
+
+	// Basic dialog component
+	const Dialog = Spicetify.React.memo(props => {
+		const [state, setState] = Spicetify.React.useState(true);
+		const self = document.querySelector(".ReactModalPortal:last-of-type");
+		const ConfirmDialog = Spicetify.ReactComponent.ConfirmDialog;
+		const isForwardRef = typeof ConfirmDialog === "function";
+		const commonProps = {
+			...props,
+			isOpen: state,
+			onClose: () => {
+				setState(false);
+				props.onClose?.();
+				self.remove();
+			},
+			onConfirm: () => {
+				setState(false);
+				props.onConfirm?.();
+				self.remove();
+			}
+		};
+
+		Spicetify.React.useEffect(() => {
+			if (state) {
+				props.onOpen?.();
+			}
+		}, [state]);
+
+		return isForwardRef ? ConfirmDialog(commonProps) : Spicetify.React.createElement(ConfirmDialog, commonProps);
+	});
+
+	// Create our own section matching Spotify's
+	const Section = Spicetify.React.memo(() => {
+		const [localStorageSize, setLocalStorageSize] = Spicetify.React.useState("");
+		const [gistEnabled, setGistEnabled] = Spicetify.React.useState(getConfig("gistEnabled") ?? false);
+		const [gistToken, setGistToken] = Spicetify.React.useState(getConfig("gistToken") ?? "");
+		const [gistId, setGistId] = Spicetify.React.useState(getConfig("gistId") ?? "");
+		const [backupInterval, setBackupInterval] = Spicetify.React.useState(getConfig("backupInterval") ?? "off");
+
+		Spicetify.React.useEffect(() => {
+  setConfig("gistEnabled", gistEnabled);
+  setConfig("gistToken", gistToken);
+  setConfig("gistId", gistId);
+  setConfig("backupInterval", backupInterval);
+}, [gistEnabled, gistToken, gistId, backupInterval]);
+
+		Spicetify.React.useEffect(() => {
+			getLocalStorageSize().then(size => setLocalStorageSize(size));
+		}, []);
+
+		function getLocalStorageSize() {
+			return new Promise(resolve => {
+				requestIdleCallback(() => {
+					let localStorageString =JSON.stringify(Object.fromEntries(Object.entries(localStorage)));
+					let totalSizeBytes = new Blob([localStorageString]).size;
+
+					const units = ["bytes", "KB", "MB", "GB"];
+					let size = totalSizeBytes;
+					let unitIndex = 0;
+
+					while (size >= 1024 && unitIndex < units.length - 1) {
+						size /= 1024;
+						unitIndex++;
+					}
+
+					resolve(`${Math.trunc(size)} ${units[unitIndex]}`);
+				});
+			});
+		}
+
+		return [
+			Spicetify.React.createElement(
+				"h2",
+				{
+					"data-encore-id": "type",
+					className: "encore-text encore-text-body-medium-bold encore-internal-color-text-base"
+				},
+				"Backup"
+			),
+			Spicetify.React.createElement(
+				"div",
+				{
+					className: "x-settings-row"
+				},
+				[
+					Spicetify.React.createElement("div", { className: "x-settings-firstColumn" }, [
+						Spicetify.React.createElement("div", null, [
+							Spicetify.React.createElement("div", null, [
+								Spicetify.React.createElement(
+									"label",
+									{
+										className: "encore-text encore-text-body-small encore-internal-color-text-base",
+										"data-encore-id": "text"
+									},
+									`Application Data:`
+								),
+								Spicetify.React.createElement(
+									"label",
+									{
+										className: "encore-text encore-text-body-small encore-internal-color-text-subdued",
+										"data-encore-id": "text"
+									},
+									` ${localStorageSize}`
+								)
+							]),
+							Spicetify.React.createElement(
+								"label",
+								{
+									className: "encore-text encore-text-body-small encore-internal-color-text-subdued",
+									"data-encore-id": "text"
+								},
+								`Content stored in the browser (local storage)`
+							)
+						])
+					]),
+					Spicetify.React.createElement("div", { className: "x-settings-secondColumn" }, [
+						Spicetify.React.createElement(
+							"button",
+							{
+								className:
+									"Button-buttonSecondary-small-useBrowserDefaultFocusStyle Button-small-buttonSecondary-useBrowserDefaultFocusStyle Button-small-buttonSecondary-isUsingKeyboard-useBrowserDefaultFocusStyle Button-buttonSecondary-small-isUsingKeyboard-useBrowserDefaultFocusStyle encore-text-body-small-bold x-settings-button",
+								"data-encore-id": "buttonSecondary",
+								style: {
+									marginRight: "8px"
+								},
+								onClick: async () => await performBackup()
+							},
+							"Backup"
+						),
+						Spicetify.React.createElement(
+							"button",
+							{
+								className:
+									"Button-buttonSecondary-small-useBrowserDefaultFocusStyle Button-small-buttonSecondary-useBrowserDefaultFocusStyle Button-small-buttonSecondary-isUsingKeyboard-useBrowserDefaultFocusStyle Button-buttonSecondary-small-isUsingKeyboard-useBrowserDefaultFocusStyle encore-text-body-small-bold x-settings-button",
+								"data-encore-id": "buttonSecondary",
+								onClick: async () => {
+									Spicetify.ReactDOM.render(
+										Spicetify.React.createElement(
+											Spicetify.ReactComponent.RemoteConfigProvider,
+											{ configuration: Spicetify.Platform.RemoteConfiguration },
+											Spicetify.React.createElement(Dialog, {
+												titleText: "Are you sure?",
+												descriptionText: "This will overwrite all your current settings!",
+												cancelText: "Cancel",
+												confirmText: "Restore",
+												onConfirm: handleRestore
+											})
+										),
+										document.createElement("div")
+									);
+								}
+							},
+							"Restore"
+						)
+					])
+				]
+			),
+			Spicetify.React.createElement(
+				"div",
+				{
+					className: "x-settings-row"
+				},
+				[
+					Spicetify.React.createElement(
+						"div",
+						{ className: "x-settings-firstColumn" },
+						Spicetify.React.createElement("div", null, [
+							Spicetify.React.createElement(
+								"div",
+								null,
+								Spicetify.React.createElement(
+									"label",
+									{ className: "encore-text encore-text-body-small encore-internal-color-text-base", "data-encore-id": "text" },
+									"Gist Integration"
+								)
+							),
+
+							Spicetify.React.createElement(
+								"label",
+								{
+									className: "encore-text encore-text-body-small encore-internal-color-text-subdued",
+									"data-encore-id": "text"
+								},
+								`Remote storage for your data (check readme for more info)`
+							)
+						])
+					),
+					Spicetify.React.createElement(
+						"div",
+						{ className: "x-settings-secondColumn" },
+						Spicetify.React.createElement(
+							"label",
+							{ className: "x-toggle-wrapper" },
+							Spicetify.React.createElement("input", {
+								id: "settings.canvasVideos",
+								className: "x-toggle-input",
+								type: "checkbox",
+								checked: gistEnabled,
+								onChange: () => setGistEnabled(!gistEnabled)
+							}),
+							Spicetify.React.createElement(
+								"span",
+								{ className: "x-toggle-indicatorWrapper" },
+								Spicetify.React.createElement("span", { className: "x-toggle-indicator" })
+							)
+						)
+					)
+				]
+			),
+			gistEnabled && [
+				Spicetify.React.createElement(
+					"div",
+					{
+						className: "x-settings-row"
+					},
+					[
+						Spicetify.React.createElement(
+							"div",
+							{ className: "x-settings-firstColumn" },
+
+							Spicetify.React.createElement(
+								"label",
+								{ className: "encore-text encore-text-body-small encore-internal-color-text-subdued", "data-encore-id": "text" },
+								"Backup Interval"
+							)
+						),
+						Spicetify.React.createElement(
+							"div",
+							{ className: "x-settings-secondColumn" },
+							Spicetify.React.createElement(
+								"span",
+								null,
+								Spicetify.React.createElement(
+									"select",
+									{
+										className: "main-dropDown-dropDown",
+										id: "desktop.settings.autostart",
+										onChange: e => setBackupInterval(e.target.value),
+										value: backupInterval
+									},
+									[
+										Spicetify.React.createElement("option", { value: "off" }, "Off"),
+										Spicetify.React.createElement("option", { value: "startup" }, "Startup"),
+										Spicetify.React.createElement("option", { value: "daily" }, "Daily")
+									]
+								)
+							)
+						)
+					]
+				),
+				Spicetify.React.createElement("div", { style: { marginTop: "10px" } }, [
+					Spicetify.React.createElement("input", {
+						type: "text",
+						placeholder: "GitHub Token",
+						value: gistToken,
+						onChange: e => setGistToken(e.target.value),
+						className: "x-settings-input",
+						type: "password"
+					}),
+					Spicetify.React.createElement("input", {
+						type: "text",
+						placeholder: "Gist ID",
+						value: gistId,
+						onChange: e => setGistId(e.target.value),
+						className: "x-settings-input",
+						style: { marginTop: "5px" }
+					})
+				])
+			]
+		];
+	});
+
+	// Function to insert our section into the settings page
+	function insertOption(name) {
+		if (name !== "/preferences") return;
+
+		const checkHeaderInterval = setInterval(() => {
+			const sections = document.querySelectorAll(".x-settings-section");
+
+			sections.forEach(section => {
+				if (section.firstChild.textContent === Spicetify.Locale._dictionary["desktop.settings.storage"]) {
+					clearInterval(checkHeaderInterval);
+
+					const sectionContainer = document.createElement("div");
+					sectionContainer.className = "x-settings-section";
+					Spicetify.ReactDOM.render(Spicetify.React.createElement(Section), sectionContainer);
+					section.parentNode.insertBefore(sectionContainer, section.nextSibling);
+				}
+			});
+		}, 1);
+	}
+
+	// Hotload useEffect
+	Spicetify.ReactDOM.render(Spicetify.React.createElement(Section), document.createElement("div"));
+
+	// Initialize + Listener
+	checkAndPerformBackup();
+	insertOption(Spicetify.Platform.History.location?.pathname);
+	Spicetify.Platform.History.listen(event => {
+		insertOption(event.pathname);
+	});
+})();
