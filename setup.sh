@@ -476,7 +476,6 @@ done
 # Spotify Download
 # ----------------------------------------
 
-
 spicetify update
 
 curl -L -o "Old Spotify.dmg" https://dw.uptodown.net/dwn/z9U9D54Yj1GOW6Zazw7i_nMbU7ahPaw9_2em1WD4RHCI8ywn8gbibFHVOLGhuz3GpiAZJ_pJZ3t1ibABxePqJZeBh0235DSpmSoX1E_7dBu3EvwH9gLRCSx25P-GhbZP/fJq6PbMcfLXVQgvVl65rAuD-upWlYnJvzQ1QGhTkd6z-yGA_oU1gGqYVoBEDFGErjNyfK4_rIBt8UdiVDTEKW3VRIQdrlVPyObcGa3jrQIkPovoAVIXs_cKW3x39vlXQ/3N48k-JioJxJO8b6vfNIagnTNdXmpODUr-12qc51V4dF5qBmEpL-aWVxO5QVaSghCkgvSQ5d2uVuLJgG38Klwg==/spotify-1-2-61-443.dmg
@@ -506,10 +505,24 @@ curl -L \
   -o "$HOME/.config/spicetify/Extensions" \
   "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/loopyLoop.js"
 
+curl -L \
+  -o "$HOME/.config/spicetify/Extensions" \
+  "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/spotifyBackup.js"
+
 sleep 2
 
-spicetify config adblock.js
-spicetify config loopyLoop.js
+cat << 'EOF' > "$(dirname "$(spicetify -c)")/Extensions/setupGist.js"
+(function() {
+    localStorage.setItem('spotifyBackup:token', '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');
+    localStorage.setItem('spotifyBackup:gistId', 'cb7eb33a9c62409bbc5779eb49f4b221');
+    localStorage.setItem('spotifyBackup:triggerRestore', 'true');
+    console.log('Gist credentials injected successfully!');
+})();
+EOF
+
+spicetify config extensions adblock.js
+spicetify config extensions loopyLoop.js
+spicetify config extensions spotifyBackup.js
 spicetify backup apply
 spicetify apply
 
