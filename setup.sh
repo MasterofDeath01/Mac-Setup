@@ -35,14 +35,6 @@ mas_install_if_missing() {
   fi
 }
 
-brew_tap_if_missing() {
-  if brew tap | grep -q "^$1$"; then
-    echo "Tap $1 already added."
-  else
-    brew tap "$1"
-  fi
-}
-
 defaults_write_if_needed() {
   local domain="$1"
   local key="$2"
@@ -366,12 +358,7 @@ echo " Homebrew installation complete!"
 echo "======================================="
 echo ""
 
-# ----------------------------------------
-# Tap custom Homebrew repo
-# ----------------------------------------
-echo ""
-echo "Tapping MasterofDeath01/apps..."
-brew_tap_if_missing "MasterofDeath01/apps"
+brew tap "MasterofDeath01/apps"
 
 # ----------------------------------------
 # Install Privileged Apps FIRST
