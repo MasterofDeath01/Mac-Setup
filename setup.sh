@@ -553,9 +553,9 @@ if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
 
   echo "Installing legacy Spotify..."
 
- brew_install_if_missing legacy_spotify
+ brew_install_if_missing legacy-spotify
 
-chflags uchg /Applications/Spotify.app/Contents/MacOS/Spotify
+chflags uchg /Applications/Spotify.app/Contents/MacOS/Spotify || true
   
   echo "Launching Spotify for first login..."
   open -a "Spotify"
