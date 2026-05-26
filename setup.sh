@@ -5,6 +5,65 @@ set -euo pipefail
 # Helpers (idempotency utilities)
 # ----------------------------------------
 
+# ----------------------------------------
+# Optional Sections
+# ----------------------------------------
+
+echo ""
+echo "======================================="
+echo " CONFIGURE SETUP
+echo "======================================="
+echo ""
+
+ask_yes_no() {
+  local prompt="$1"
+  local default="${2:-Y}"
+
+  local reply
+
+  if [[ "$default" == "Y" ]]; then
+    read -rp "$prompt [Y/n]: " reply
+    reply="${reply:-Y}"
+  else
+    read -rp "$prompt [y/N]: " reply
+    reply="${reply:-N}"
+  fi
+
+  [[ "$reply" =~ ^[Yy]$ ]]
+}
+
+if ask_yes_no "Refresh all .DS_Store files?" "N"; then
+  REFRESH_DS_STORE=true
+else
+  REFRESH_DS_STORE=false
+fi
+
+if ask_yes_no "Install Homebrew apps?" "Y"; then
+  INSTALL_BREW_APPS=true
+else
+  INSTALL_BREW_APPS=false
+fi
+
+if ask_yes_no "Install Mac App Store apps?" "Y"; then
+  INSTALL_MAS_APPS=true
+else
+  INSTALL_MAS_APPS=false
+fi
+
+if ask_yes_no "Run Spotify setup?" "Y"; then
+  RUN_SPOTIFY_SETUP=true
+else
+  RUN_SPOTIFY_SETUP=false
+fi
+
+if ask_yes_no "Launch apps at end of setup?" "Y"; then
+  LAUNCH_APPS=true
+else
+  LAUNCH_APPS=false
+fi
+
+echo ""
+
 brew_install_if_missing() {
   local name="$1"
 
@@ -139,10 +198,17 @@ defaults_write_if_needed com.apple.finder ShowStatusBar -bool true
 defaults_write_if_needed com.apple.finder FXCalculateAllSizes -bool true
 
 #Refresh .DS_Store
-echo "Refreshing .DS_Store Files — this may take a while..."
-find "$HOME" \
-  -path "$HOME/Library" -prune -o \
-  -name ".DS_Store" -type f -delete 2>/dev/null
+if [[ "$REFRESH_DS_STORE" == true ]]; then
+  echo "Refreshing .DS_Store Files — this may take a while..."
+
+  find "$HOME" \
+    -path "$HOME/Library" -prune -o \
+    -name ".DS_Store" -type f -delete 2>/dev/null
+
+  echo ".DS_Store refresh complete."
+else
+  echo "Skipping .DS_Store refresh."
+fi
 
 echo "Finder settings configured"
 
@@ -350,10 +416,18 @@ mas_apps=(
   # Whatsapp has been moved to top because it requires admin
 )
 
-for app_id in "${mas_apps[@]}"; do
+if [[ "$INSTALL_MAS_APPS" == true ]]; then
+
+  echo "Installing Mac App Store apps..."
+
+  for app_id in "${mas_apps[@]}"; do
     echo "Installing MAS app $app_id..."
     mas_install_if_missing "$app_id"
   done
+
+else
+  echo "Skipping Mac App Store installs."
+fi
 
 # ----------------------------------------
 # Install Rosetta (for Apple Silicon)
@@ -466,17 +540,26 @@ brew_apps=(
   font-comfortaa
 )
 
-for cask in "${brew_apps[@]}"; do
-  echo "Installing $cask..."
-  brew_install_if_missing "$cask"
-done 
+if [[ "$INSTALL_BREW_APPS" == true ]]; then
+
+  echo "Installing custom apps and fonts..."
+
+  for cask in "${brew_apps[@]}"; do
+    echo "Installing $cask..."
+    brew_install_if_missing "$cask"
+  done
+
+else
+  echo "Skipping Homebrew app installation."
+fi
 
 
 # ----------------------------------------
 # Spotify Download
 # ----------------------------------------
+if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
 
-spicetify update
+  spicetify update
 
 curl -L -o "Old Spotify.dmg" https://dw.uptodown.net/dwn/z9U9D54Yj1GOW6Zazw7i_nMbU7ahPaw9_2em1WD4RHCI8ywn8gbibFHVOLGhuz3GpiAZJ_pJZ3t1ibABxePqJZeBh0235DSpmSoX1E_7dBu3EvwH9gLRCSx25P-GhbZP/fJq6PbMcfLXVQgvVl65rAuD-upWlYnJvzQ1QGhTkd6z-yGA_oU1gGqYVoBEDFGErjNyfK4_rIBt8UdiVDTEKW3VRIQdrlVPyObcGa3jrQIkPovoAVIXs_cKW3x39vlXQ/3N48k-JioJxJO8b6vfNIagnTNdXmpODUr-12qc51V4dF5qBmEpL-aWVxO5QVaSghCkgvSQ5d2uVuLJgG38Klwg==/spotify-1-2-61-443.dmg
 
@@ -528,6 +611,10 @@ spicetify apply
 rm "$HOME/.config/spicetify/Extensions/setupGist.js"
 
 spicetify apply
+
+else
+  echo "Skipping Spotify setup."
+fi
 
 # ----------------------------------------
 # Download Personal Config Files
@@ -587,11 +674,18 @@ apps_to_open=(
   "ChatGPT"
 )
 
-for app in "${apps_to_open[@]}"; do
-  echo "Opening $app..."
-  open -a "$app" 2>/dev/null || echo "$app not installed or failed to open"
-done
+if [[ "$LAUNCH_APPS" == true ]]; then
 
+  echo "Opening selected apps..."
+
+  for app in "${apps_to_open[@]}"; do
+    echo "Opening $app..."
+    open -a "$app" 2>/dev/null || echo "$app not installed or failed to open"
+  done
+
+else
+  echo "Skipping app launch section."
+fi
 
 echo ""
 echo "======================================="
