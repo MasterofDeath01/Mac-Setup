@@ -364,8 +364,6 @@ brew tap "MasterofDeath01/apps"
 # Install Privileged Apps FIRST
 # ----------------------------------------
 
-echo "Installing privileged apps..."
-
 privileged_apps=(
   auto-subs
   blackhole-2ch
@@ -374,6 +372,7 @@ privileged_apps=(
   shutter-encoder
 )
 if [[ "$INSTALL_BREW_APPS" == true ]]; then
+echo "Installing privileged apps..."
   for app in "${privileged_apps[@]}"; do
     echo "Installing $app..."
     brew_install_if_missing "$app"
