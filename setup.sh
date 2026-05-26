@@ -559,7 +559,8 @@ chflags uchg /Applications/Spotify.app/Contents/MacOS/Spotify || true
   
   echo "Launching Spotify for first login..."
   open -a "Spotify"
-  read -rp "Log into Spotify fully, then press Enter..."
+  read -rp "Log into Spotify fully, then press \033[1mENTER/RETURN\033[0m..."
+
 
   echo "Setting Spicetify Spotify path..."
 
