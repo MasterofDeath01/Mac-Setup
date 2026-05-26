@@ -152,16 +152,28 @@ else
   LAUNCH_APPS=false
 fi
 
+# -----------------------------
+# CONFIGURING SETTINGS
+# -----------------------------
 
+if [[ "$CONFIGURE_MACOS_SETTINGS" == true ]]; then
 
+# ----------------------------------------
+# Open Settings Panes
+# ----------------------------------------
 
+echo "Please configure the following in System Settings:"
+echo "- Screenshot shortcuts"
+echo "- Control Center"
+echo "- Desktop & Dock"
+echo "- Wallpaper"
 
-
+open "x-apple.systempreferences:"
 
 # -----------------------------
 # Screenshot Directory Change
 # -----------------------------
-if [[ "$CONFIGURE_MACOS_SETTINGS" == true ]]; then
+
 echo ""
 echo "Configuring screenshot save location..."
 
@@ -299,7 +311,10 @@ killall cfprefsd 2>/dev/null || true
 
 echo "All settings applied!"
 
+else
+echo "Skipping MacOS settings configuration..."
 fi
+
 # ----------------------------------------
 # Install Homebrew if not present
 # ----------------------------------------
@@ -357,18 +372,6 @@ echo ""
 echo ""
 echo "Tapping MasterofDeath01/apps..."
 brew_tap_if_missing "MasterofDeath01/apps"
-
-# ----------------------------------------
-# Open Settings Panes
-# ----------------------------------------
-
-echo "Please configure the following in System Settings:"
-echo "- Screenshot shortcuts"
-echo "- Control Center"
-echo "- Desktop & Dock"
-echo "- Wallpaper"
-
-open "x-apple.systempreferences:"
 
 # ----------------------------------------
 # Install Privileged Apps FIRST
