@@ -551,9 +551,8 @@ else
   echo "Skipping Homebrew app installation."
 fi
 
-
 # ----------------------------------------
-# Spotify Setup (Legacy + Locked + Spicetify)
+# Spotify Setup
 # ----------------------------------------
 
 if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
@@ -566,10 +565,6 @@ if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
     echo "Spicetify already installed."
   fi
 
-  echo "Installing Spotify Marketplace..."
-
-  curl -fsSL https://raw.githubusercontent.com/spicetify/spicetify-marketplace/main/resources/install.sh | sh
-
   echo "Installing legacy Spotify..."
 
   SPOTIFY_DMG="$HOME/OldSpotify.dmg"
@@ -581,21 +576,21 @@ if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
   hdiutil detach /Volumes/Spotify/
   rm "$SPOTIFY_DMG"
 
-  echo "🚫 Preventing Spotify auto-update (locking binary)..."
-
-  sudo chflags -R uchg /Applications/Spotify.app
-
-  echo "Launching Spotify (first login)..."
+  echo "Launching Spotify for first login..."
   open -a "Spotify"
   read -rp "Log into Spotify fully, then press Enter..."
 
-  echo "Configuring Spicetify..."
+  echo "Setting Spicetify Spotify path..."
 
   spicetify config spotify_path "/Applications/Spotify.app"
 
-  mkdir -p "$HOME/.config/spicetify/Extensions"
+  echo "Installing Spotify Marketplace..."
+
+  curl -fsSL https://raw.githubusercontent.com/spicetify/spicetify-marketplace/main/resources/install.sh | sh
 
   echo "Installing extensions..."
+
+  mkdir -p "$HOME/.config/spicetify/Extensions"
 
   curl -L -o "$HOME/.config/spicetify/Extensions/adblock.js" \
     "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/adblock.js"
@@ -606,7 +601,7 @@ if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
   curl -L -o "$HOME/.config/spicetify/Extensions/spotifyBackup.js" \
     "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/spotifyBackup.js"
 
-  echo "Configuring SpotifyBackup (hardcoded)..."
+  echo "Configuring Spicetify..."
 
   spicetify config extensions adblock.js,loopyLoop.js,spotifyBackup.js
 
