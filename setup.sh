@@ -543,9 +543,8 @@ fi
 
 if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
 
-  echo "Installing Spicetify CLI (if needed)..."
-
   if ! command -v spicetify >/dev/null 2>&1; then
+   echo "Installing Spicetify CLI..."
     brew_install_if_missing spicetify-cli
   else
     echo "Spicetify already installed."
