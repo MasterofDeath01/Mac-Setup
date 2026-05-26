@@ -376,6 +376,7 @@ brew_tap_if_missing "MasterofDeath01/apps"
 # ----------------------------------------
 # Install Privileged Apps FIRST
 # ----------------------------------------
+
 echo "Installing privileged apps..."
 
 privileged_apps=(
@@ -385,17 +386,17 @@ privileged_apps=(
   mas
   shutter-encoder
 )
-
-for app in "${privileged_apps[@]}"; do
-  echo "Installing $app..."
-  brew_install_if_missing "$app"
-done
-
-sleep 3
+if [[ "$INSTALL_BREW_APPS" == true ]]; then
+  for app in "${privileged_apps[@]}"; do
+    echo "Installing $app..."
+    brew_install_if_missing "$app"
+  done
+else
+  echo "Skipping priviledged apps install..."
+fi
+sleep 2
 
 osascript -e 'quit app "Shutter Encoder"' 2>/dev/null || true
-
-echo "Installing Mac App Store apps..."
 
 mas_apps=(
   6745342698 # Ublock Origin Lite
