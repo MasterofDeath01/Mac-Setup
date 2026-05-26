@@ -553,62 +553,76 @@ fi
 
 
 # ----------------------------------------
-# Spotify Download
+# Spotify Setup (Legacy + Locked + Spicetify)
 # ----------------------------------------
+
 if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
 
-  spicetify update
+  echo "Installing Spicetify CLI (if needed)..."
 
-curl -L -o "Old Spotify.dmg" https://dw.uptodown.net/dwn/z9U9D54Yj1GOW6Zazw7i_nMbU7ahPaw9_2em1WD4RHCI8ywn8gbibFHVOLGhuz3GpiAZJ_pJZ3t1ibABxePqJZeBh0235DSpmSoX1E_7dBu3EvwH9gLRCSx25P-GhbZP/fJq6PbMcfLXVQgvVl65rAuD-upWlYnJvzQ1QGhTkd6z-yGA_oU1gGqYVoBEDFGErjNyfK4_rIBt8UdiVDTEKW3VRIQdrlVPyObcGa3jrQIkPovoAVIXs_cKW3x39vlXQ/3N48k-JioJxJO8b6vfNIagnTNdXmpODUr-12qc51V4dF5qBmEpL-aWVxO5QVaSghCkgvSQ5d2uVuLJgG38Klwg==/spotify-1-2-61-443.dmg
+  if ! command -v spicetify >/dev/null 2>&1; then
+    brew install spicetify-cli
+  else
+    echo "Spicetify already installed."
+  fi
 
-sleep 2
+  echo "Installing Spotify Marketplace..."
 
-hdiutil attach "Old Spotify.dmg"
-cp -R /Volumes/Spotify/Spotify.app /Applications/
-hdiutil detach /Volumes/Spotify/
-rm "Old Spotify.dmg"
+  curl -fsSL https://raw.githubusercontent.com/spicetify/spicetify-marketplace/main/resources/install.sh | sh
 
-sleep 2
+  echo "Installing legacy Spotify..."
 
-chflags uchg /Applications/Spotify.app/Contents/MacOS/Spotify
+  SPOTIFY_DMG="$HOME/OldSpotify.dmg"
 
-open -a "Spotify"
+  curl -L -o "$SPOTIFY_DMG" "https://dw.uptodown.net/dwn/z9U9D54Yj1GOW6Zazw7i_nMbU7ahPaw9_2em1WD4RHCI8ywn8gbibFHVOLGhuz3GpiAZJ_pJZ3t1ibABxePqJZeBh0235DSpmSoX1E_7dBu3EvwH9gLRCSx25P-GhbZP/fJq6PbMcfLXVQgvVl65rAuD-upWlYnJvzQ1QGhTkd6z-yGA_oU1gGqYVoBEDFGErjNyfK4_rIBt8UdiVDTEKW3VRIQdrlVPyObcGa3jrQIkPovoAVIXs_cKW3x39vlXQ/3N48k-JioJxJO8b6vfNIagnTNdXmpODUr-12qc51V4dF5qBmEpL-aWVxO5QVaSghCkgvSQ5d2uVuLJgG38Klwg==/spotify-1-2-61-443.dmg"
 
-echo "Log into your spotify account..."
+  hdiutil attach "$SPOTIFY_DMG"
+  cp -R /Volumes/Spotify/Spotify.app /Applications/
+  hdiutil detach /Volumes/Spotify/
+  rm "$SPOTIFY_DMG"
 
-read -rp "Press Enter after logging into Spotify..."
+  echo "🚫 Preventing Spotify auto-update (locking binary)..."
 
-curl -L \
-  -o "$HOME/.config/spicetify/Extensions/adblock.js" \
-  "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/adblock.js"
+  sudo chflags -R uchg /Applications/Spotify.app
 
-curl -L \
-  -o "$HOME/.config/spicetify/Extensions/loopyLoopy.js" \
-  "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/loopyLoop.js"
+  echo "Launching Spotify (first login)..."
+  open -a "Spotify"
+  read -rp "Log into Spotify fully, then press Enter..."
 
-curl -L \
-  -o "$HOME/.config/spicetify/Extensions/spotifyBackup.js" \
-  "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/spotifyBackup.js"
+  echo "Configuring Spicetify..."
 
-cat << 'EOF' > "$(dirname "$(spicetify -c)")/Extensions/setupGist.js"
-(function() {
-    localStorage.setItem('spotifyBackup:token', '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');
-    localStorage.setItem('spotifyBackup:gistId', 'cb7eb33a9c62409bbc5779eb49f4b221');
-    localStorage.setItem('spotifyBackup:triggerRestore', 'true');
-    console.log('Gist credentials injected successfully!');
-})();
-EOF
+  spicetify config spotify_path "/Applications/Spotify.app"
 
-spicetify config extensions setupGist.js
-spicetify config extensions adblock.js
-spicetify config extensions loopyLoop.js
-spicetify config extensions spotifyBackup.js
-spicetify backup apply
-spicetify apply
+  mkdir -p "$HOME/.config/spicetify/Extensions"
 
-rm "$HOME/.config/spicetify/Extensions/setupGist.js"
+  echo "Installing extensions..."
 
-spicetify apply
+  curl -L -o "$HOME/.config/spicetify/Extensions/adblock.js" \
+    "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/adblock.js"
+
+  curl -L -o "$HOME/.config/spicetify/Extensions/loopyLoop.js" \
+    "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/loopyLoop.js"
+
+  curl -L -o "$HOME/.config/spicetify/Extensions/spotifyBackup.js" \
+    "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/spotifyBackup.js"
+
+  echo "Configuring SpotifyBackup (hardcoded)..."
+
+  spicetify config extensions adblock.js,loopyLoop.js,spotifyBackup.js
+
+  spicetify config spotify_backup 1
+  spicetify config spotify_backup_gist "cb7eb33a9c62409bbc5779eb49f4b221"
+  spicetify config spotify_backup_token "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"
+
+  echo "Applying Spicetify..."
+
+  spicetify backup apply
+  spicetify apply
+
+  echo "Restarting Spotify..."
+
+  killall Spotify || true
+  open -a "Spotify"
 
 else
   echo "Skipping Spotify setup."
