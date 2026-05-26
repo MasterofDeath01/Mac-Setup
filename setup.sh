@@ -585,15 +585,11 @@ chflags uchg /Applications/Spotify.app/Contents/MacOS/Spotify || true
 
   echo "Configuring Spicetify..."
 
-  spicetify config extensions adblock.js,loopyLoop.js,spotifyBackup.js
-
-  spicetify config spotify_backup 1
-  spicetify config spotify_backup_gist "cb7eb33a9c62409bbc5779eb49f4b221"
-  spicetify config spotify_backup_token "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"
+  spicetify config extensions adblock.js
+  spicetify config extensions loopyloop.js
+  spicetify config extensions spotifyBackup.js
 
   echo "Applying Spicetify..."
-
-  spicetify backup apply
   spicetify apply
 
   echo "Restarting Spotify..."
