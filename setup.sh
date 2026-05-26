@@ -104,15 +104,16 @@ brew_tap_if_missing() {
 defaults_write_if_needed() {
   local domain="$1"
   local key="$2"
-  shift 2
+  local type="$3"
+  local value="$4"
 
   local current
   current=$(defaults read "$domain" "$key" 2>/dev/null || true)
 
-  if [[ "$current" == "$*" ]]; then
+  if [[ "$current" == "$value" ]]; then
     echo "$domain $key already set."
   else
-    defaults write "$domain" "$key" "$@"
+    defaults write "$domain" "$key" "$type" "$value"
     echo "Updated $domain $key"
   fi
 }
@@ -574,22 +575,22 @@ sleep 2
 
 chflags uchg /Applications/Spotify.app/Contents/MacOS/Spotify
 
-open -a spotify
+open -a "Spotify"
 
 echo "Log into your spotify account..."
 
-sleep 180
+read -rp "Press Enter after logging into Spotify..."
 
 curl -L \
-  -o "$HOME/.config/spicetify/Extensions" \
+  -o "$HOME/.config/spicetify/Extensions/adblock.js" \
   "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/adblock.js"
 
 curl -L \
-  -o "$HOME/.config/spicetify/Extensions" \
+  -o "$HOME/.config/spicetify/Extensions/loopyLoopy.js" \
   "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/loopyLoop.js"
 
 curl -L \
-  -o "$HOME/.config/spicetify/Extensions" \
+  -o "$HOME/.config/spicetify/Extensions/spotifyBackup.js" \
   "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/spotifyBackup.js"
 
 cat << 'EOF' > "$(dirname "$(spicetify -c)")/Extensions/setupGist.js"
@@ -629,8 +630,10 @@ curl -L \
   -o "$DOWNLOADS_DIR/Raycast.rayconfig" \
   "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/Raycast.rayconfig"
 
+SCRIPT_NAME="MasterofDeath's Editing Script.jsx"
+
 curl -L \
-  -o "$DOWNLOADS_DIR/MasterofDeath's Editing Script.jsx" \
+  -o "$DOWNLOADS_DIR/$SCRIPT_NAME" \
   "https://raw.githubusercontent.com/MasterofDeath01/Mac-Setup/main/MasterofDeath%27s%20Editing%20Script.jsx"
 
 echo "Personal config files downloaded to Downloads."
