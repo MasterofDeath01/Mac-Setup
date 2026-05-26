@@ -429,7 +429,6 @@ fi
 # ----------------------------------------
 # Install custom apps & fonts
 # ----------------------------------------
-echo "Installing custom apps and fonts..."
 
 brew_apps=(
 
