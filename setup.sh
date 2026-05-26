@@ -4,64 +4,6 @@ set -euo pipefail
 # ----------------------------------------
 # Helpers (idempotency utilities)
 # ----------------------------------------
-
-# ----------------------------------------
-# Optional Sections
-# ----------------------------------------
-
-echo ""
-echo "======================================="
-echo " CONFIGURE SETUP"
-echo "======================================="
-echo ""
-
-ask_yes_no() {
-  local prompt="$1"
-  local default="${2:-Y}"
-
-  local reply
-
-  if [[ "$default" == "Y" ]]; then
-    read -rp "$prompt [Y/n]: " reply
-    reply="${reply:-Y}"
-  else
-    read -rp "$prompt [y/N]: " reply
-    reply="${reply:-N}"
-  fi
-
-  [[ "$reply" =~ ^[Yy]$ ]]
-}
-
-if ask_yes_no "Refresh all .DS_Store files?" "N"; then
-  REFRESH_DS_STORE=true
-else
-  REFRESH_DS_STORE=false
-fi
-
-if ask_yes_no "Install Homebrew apps?" "Y"; then
-  INSTALL_BREW_APPS=true
-else
-  INSTALL_BREW_APPS=false
-fi
-
-if ask_yes_no "Install Mac App Store apps?" "Y"; then
-  INSTALL_MAS_APPS=true
-else
-  INSTALL_MAS_APPS=false
-fi
-
-if ask_yes_no "Run Spotify setup?" "Y"; then
-  RUN_SPOTIFY_SETUP=true
-else
-  RUN_SPOTIFY_SETUP=false
-fi
-
-if ask_yes_no "Launch apps at end of setup?" "Y"; then
-  LAUNCH_APPS=true
-else
-  LAUNCH_APPS=false
-fi
-
 echo ""
 
 brew_install_if_missing() {
@@ -104,16 +46,15 @@ brew_tap_if_missing() {
 defaults_write_if_needed() {
   local domain="$1"
   local key="$2"
-  local type="$3"
-  local value="$4"
+  shift 2
 
   local current
   current=$(defaults read "$domain" "$key" 2>/dev/null || true)
 
-  if [[ "$current" == "$value" ]]; then
+  if [[ "$current" == "$*" ]]; then
     echo "$domain $key already set."
   else
-    defaults write "$domain" "$key" "$type" "$value"
+    defaults write "$domain" "$key" "$@"
     echo "Updated $domain $key"
   fi
 }
@@ -140,8 +81,9 @@ exit 1
 require_full_disk_access
 open / 2>/dev/null || true
 osascript -e 'tell application "Finder" to get name of front window' -e 'tell application "System Events" to get name of current user'
+
 # ----------------------------------------
-# Enable Touch ID for sudo (macOS)
+# Enable Touch ID for sudo
 # ----------------------------------------
 
 PAM_SUDO_FILE="/etc/pam.d/sudo"
@@ -161,10 +103,73 @@ else
   echo "Touch ID already enabled."
 fi
 
+# ----------------------------------------
+# Configure Setup
+# ----------------------------------------
+
+echo ""
+echo "======================================="
+echo " CONFIGURE SETUP"
+echo "======================================="
+echo ""
+
+ask_yes_no() {
+  local prompt="$1"
+  local default="${2:-Y}"
+
+  local reply
+
+  if [[ "$default" == "Y" ]]; then
+    read -rp "$prompt [Y/n]: " reply
+    reply="${reply:-Y}"
+  else
+    read -rp "$prompt [y/N]: " reply
+    reply="${reply:-N}"
+  fi
+
+  [[ "$reply" =~ ^[Yy]$ ]]
+}
+
+if ask_yes_no "Configure macOS Settings?" "N"; then
+  CONFIGURE_MACOS_SETTINGS=true
+else
+  CONFIGURE_MACOS_SETTINGS=false
+fi
+
+if ask_yes_no "Install Homebrew apps?" "Y"; then
+  INSTALL_BREW_APPS=true
+else
+  INSTALL_BREW_APPS=false
+fi
+
+if ask_yes_no "Install Mac App Store apps?" "Y"; then
+  INSTALL_MAS_APPS=true
+else
+  INSTALL_MAS_APPS=false
+fi
+
+if ask_yes_no "Run Spotify setup?" "Y"; then
+  RUN_SPOTIFY_SETUP=true
+else
+  RUN_SPOTIFY_SETUP=false
+fi
+
+if ask_yes_no "Launch apps at end of setup?" "Y"; then
+  LAUNCH_APPS=true
+else
+  LAUNCH_APPS=false
+fi
+
+
+
+
+
+
+
 # -----------------------------
 # Screenshot Directory Change
 # -----------------------------
-
+if [[ "$CONFIGURE_MACOS_SETTINGS" == true ]]; then
 echo ""
 echo "Configuring screenshot save location..."
 
@@ -199,7 +204,6 @@ defaults_write_if_needed com.apple.finder ShowStatusBar -bool true
 defaults_write_if_needed com.apple.finder FXCalculateAllSizes -bool true
 
 #Refresh .DS_Store
-if [[ "$REFRESH_DS_STORE" == true ]]; then
   echo "Refreshing .DS_Store Files — this may take a while..."
 
   find "$HOME" \
@@ -207,9 +211,6 @@ if [[ "$REFRESH_DS_STORE" == true ]]; then
     -name ".DS_Store" -type f -delete 2>/dev/null
 
   echo ".DS_Store refresh complete."
-else
-  echo "Skipping .DS_Store refresh."
-fi
 
 echo "Finder settings configured"
 
@@ -306,6 +307,7 @@ killall cfprefsd 2>/dev/null || true
 
 echo "All settings applied!"
 
+fi
 # ----------------------------------------
 # Install Homebrew if not present
 # ----------------------------------------
