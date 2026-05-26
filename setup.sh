@@ -115,17 +115,9 @@ echo ""
 
 ask_yes_no() {
   local prompt="$1"
-  local default="${2:-Y}"
-
   local reply
 
-  if [[ "$default" == "Y" ]]; then
-    read -rp "$prompt [Y/n]: " reply
-    reply="${reply:-Y}"
-  else
-    read -rp "$prompt [y/N]: " reply
-    reply="${reply:-N}"
-  fi
+  read -rp "$prompt [y/n]: " reply
 
   [[ "$reply" =~ ^[Yy]$ ]]
 }
