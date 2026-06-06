@@ -508,6 +508,7 @@ brew_apps=(
   capcut
   imageoptim
   mkvtoolnix
+  stremio
   macusb
   codeforreal1/tap/compresso
 
