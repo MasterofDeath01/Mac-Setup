@@ -555,13 +555,12 @@ if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
 
  brew_install_if_missing legacy-spotify
 
-bash <(curl -sSL https://spotx-official.github.io/run.sh)
 chflags uchg /Applications/Spotify.app/Contents/MacOS/Spotify
   echo "Launching Spotify for first login..."
   open -a "Spotify"
   read -rp "Log into Spotify fully, then press ENTER/RETURN..."
 
-
+bash <(curl -sSL https://spotx-official.github.io/run.sh)
 spicetify backup apply
 
   echo "Setting Spicetify Spotify path..."
