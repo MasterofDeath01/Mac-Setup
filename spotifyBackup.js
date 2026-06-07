@@ -42,6 +42,22 @@
 	}
 
 	// Backup / Restore functions
+
+	function sanitizeLocalStorage() {
+	  const output = {};
+
+	  for (let i = 0; i < localStorage.length; i++) {
+	    const key = localStorage.key(i);
+
+	    // Never include SpotifyBackup config (contains sensitive token data)
+	    if (key === "spotifyBackup:settings") continue;
+
+	    output[key] = localStorage.getItem(key);
+	  }
+
+	  return output;
+	}
+
 	async function performBackup() {
 		if (!getConfig("gistEnabled")) {
 			Spicetify.Platform.ClipboardAPI.copy(localStorage)
@@ -63,7 +79,7 @@
 					body: JSON.stringify({
 						files: {
 							"spotify-backup.json": {
-								content: JSON.stringify(localStorage)
+								content: JSON.stringify(sanitizeLocalStorage())
 							}
 						}
 					})
@@ -135,6 +151,9 @@
 			localStorage.clear();
 			for (let key in parsedBackupData) {
 				if (parsedBackupData.hasOwnProperty(key)) {
+					if (key === "spotifyBackup:settings") {
+					  continue;
+					}
 					localStorage.setItem(key, parsedBackupData[key]);
 				}
 			}
