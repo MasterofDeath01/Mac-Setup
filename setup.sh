@@ -436,7 +436,6 @@ brew_apps=(
 
   adobe-activation-tool
   topaz-video-enhance-ai
-  cleanmymacx
   adobe-downloader
   altone-trial-bold-oblique
   altone-trial-bold
@@ -631,7 +630,6 @@ echo "Personal config files downloaded to Downloads."
 # ----------------------------------------
 
 sudo xattr -cr /Applications/Mos.app
-sudo xattr -cr /Applications/'CleanMyMac X.app'
 sudo xattr -cr /Applications/'Topaz Video.app'
 sudo xattr -cr /Applications/'Adobe Downloader.app'
 sudo xattr -cr /Applications/Adobe\ Activation\ Tool.app
