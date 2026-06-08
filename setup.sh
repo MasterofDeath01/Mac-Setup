@@ -551,8 +551,8 @@ if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
     echo "Spicetify already installed."
   fi
 
-rm -rf ~/Library/Caches/com.spotify.client
-brew uninstall legacy-spotify
+rm -rf ~/Library/Caches/com.spotify.client 2>/dev/null || true
+brew uninstall legacy-spotify 2>/dev/null || true
   echo "Installing legacy Spotify..."
 
  brew_install_if_missing legacy-spotify
