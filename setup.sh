@@ -560,7 +560,7 @@ brew uninstall legacy-spotify 2>/dev/null || true
 
 chflags uchg /Applications/Spotify.app/Contents/MacOS/Spotify
   echo "Launching Spotify for first login..."
-  open -a "Spotify"
+  open -a "Spotify.app" || true
   read -rp "Log into Spotify fully, then press ENTER/RETURN..."
 
 bash <(curl -sSL https://spotx-official.github.io/run.sh)
