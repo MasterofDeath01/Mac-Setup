@@ -358,8 +358,6 @@ echo " Homebrew installation complete!"
 echo "======================================="
 echo ""
 
-brew tap "MasterofDeath01/apps"
-
 # ----------------------------------------
 # Install Privileged Apps FIRST
 # ----------------------------------------
@@ -429,6 +427,9 @@ fi
 # ----------------------------------------
 # Install custom apps & fonts
 # ----------------------------------------
+
+brew tap masterofdeath01/apps
+brew trust masterofdeath01/apps
 
 brew_apps=(
 
