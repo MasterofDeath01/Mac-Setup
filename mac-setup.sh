@@ -675,6 +675,7 @@ sudo xattr -cr /Applications/Adobe\ Activation\ Tool.app
 # ----------------------------------------
 
 if [[ "$REFRESH_DS_STORE" == true ]]; then
+  echo ""
   echo "Refreshing .DS_Store Files — this may take a while..."
 
   find "$HOME" \
