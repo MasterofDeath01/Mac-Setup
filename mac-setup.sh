@@ -96,10 +96,6 @@ else
   echo "Touch ID already enabled."
 fi
 
-# ----------------------------------------
-# Configure Setup
-# ----------------------------------------
-
 echo ""
 echo "======================================="
 echo " CONFIGURE SETUP"
@@ -144,10 +140,6 @@ if ask_yes_no "Launch apps at end of setup?" "Y"; then
 else
   LAUNCH_APPS=false
 fi
-
-# -----------------------------
-# CONFIGURING SETTINGS
-# -----------------------------
 
 if [[ "$CONFIGURE_MACOS_SETTINGS" == true ]]; then
 
