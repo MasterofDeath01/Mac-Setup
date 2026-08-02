@@ -476,7 +476,6 @@ brew_apps=(
   onyx
   chatgpt
   surfshark
-  batfi
   raycast
   betterdisplay
   modrinth
