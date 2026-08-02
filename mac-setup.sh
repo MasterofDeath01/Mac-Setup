@@ -397,7 +397,7 @@ mas_apps=(
   510620098  # MediaInfo
   1448916662 # Step Two
   1355679052 # Dropover
-  
+  )
   echo "Installing Mac App Store apps..."
 
   for app_id in "${mas_apps[@]}"; do
