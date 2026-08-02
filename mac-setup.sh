@@ -1,10 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
+echo ""
+
 # ----------------------------------------
 # Helpers (idempotency utilities)
 # ----------------------------------------
-echo ""
 
 brew_install_if_missing() {
   local name="$1"
