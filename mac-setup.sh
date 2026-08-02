@@ -1,4 +1,4 @@
-#!/bin/bash
+§#!/bin/bash
 set -euo pipefail
 
 # ----------------------------------------
@@ -363,16 +363,19 @@ brew update
 # Install Privileged Apps FIRST
 # ----------------------------------------
 
+brew tap masterofdeath01/apps
+brew trust masterofdeath01/apps
+
 privileged_apps=(
   auto-subs
   blackhole-2ch
   microsoft-teams
   mas
-  shutter-encoder
   powerpoint-2024
   excel-2024
   word-2024
   microsoft-serializer
+  shutter-encoder
 )
 
 echo "Installing privileged apps..."
@@ -426,9 +429,6 @@ fi
 # ----------------------------------------
 
 if [[ "$INSTALL_BREW_APPS" == true ]]; then
-
-brew tap masterofdeath01/apps
-brew trust masterofdeath01/apps
 
 brew_apps=(
 
