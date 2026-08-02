@@ -154,6 +154,8 @@ else
   LAUNCH_APPS=false
 fi
 
+echo ""
+
 if [[ "$CONFIGURE_MACOS_SETTINGS" == true ]]; then
 
 echo ""
@@ -550,11 +552,15 @@ echo " REMOVE MICROSOFT AUTO UPDATE"
 echo "======================================="
 echo ""
 
+echo "Removing Microsoft AutoUpdate..."
+
 sudo pkill -9 "Microsoft AutoUpdate"
 sudo rm -rf "/Library/Application Support/Microsoft/MAU2.0"
 sudo rm -f /Library/LaunchAgents/com.microsoft.update.agent.plist
 sudo rm -f /Library/LaunchDaemons/com.microsoft.update.helper.plist
 sudo rm -f /Library/PrivilegedHelperTools/com.microsoft.update.helper
+
+echo "Removed Microsoft AutoUpdate."
 
 
 else
