@@ -569,6 +569,8 @@ chmod -R 755 /Applications/Spotify.app || true
   open -a "Spotify.app" || true
   read -rp "Log into Spotify fully, then press ENTER/RETURN..."
 
+sleep 60
+
 bash <(curl -sSL https://spotx-official.github.io/run.sh) --blockupdates
 
 spicetify backup apply
