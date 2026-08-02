@@ -124,10 +124,16 @@ else
   INSTALL_BREW_APPS=false
 fi
 
-if ask_yes_no "Install Mac App Store apps?" "Y"; then
-  INSTALL_MAS_APPS=true
+if ask_yes_no "Remove Microsoft Auto-Update?" "Y"; then
+  REMOVE_MAU=true
 else
-  INSTALL_MAS_APPS=false
+  REMOVE_MAU=false
+fi
+
+if ask_yes_no "Launch apps at end of setup?" "Y"; then
+  LAUNCH_APPS=true
+else
+  LAUNCH_APPS=false
 fi
 
 if ask_yes_no "Run Spotify setup?" "Y"; then
@@ -537,9 +543,23 @@ else
   echo "Skipping Homebrew app installation..."
 fi
 
-# ----------------------------------------
-# Spotify Setup
-# ----------------------------------------
+if [[ "$REMOVE_MAU" == true ]]; then
+echo ""
+echo "======================================="
+echo " REMOVE MICROSOFT AUTO UPDATE"
+echo "======================================="
+echo ""
+
+sudo pkill -9 "Microsoft AutoUpdate"
+sudo rm -rf "/Library/Application Support/Microsoft/MAU2.0"
+sudo rm -f /Library/LaunchAgents/com.microsoft.update.agent.plist
+sudo rm -f /Library/LaunchDaemons/com.microsoft.update.helper.plist
+sudo rm -f /Library/PrivilegedHelperTools/com.microsoft.update.helper
+
+
+else
+  echo "Skipping removing MAU."
+fi
 
 if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
 
