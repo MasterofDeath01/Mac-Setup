@@ -390,14 +390,15 @@ osascript -e 'quit app "Shutter Encoder"' 2>/dev/null || true
 if [[ "$INSTALL_MAS_APPS" == true ]]; then
 
 mas_apps=(
-  310633997 #Whatsapp Messenger
+  310633997  #Whatsapp Messenger
   6745342698 # Ublock Origin Lite
   6698876601 # Folder Preview
   1592917505 # Noir - Dark Mode for Safari
   510620098  # MediaInfo
   1448916662 # Step Two
   1355679052 # Dropover
-  )
+)
+  
   echo "Installing Mac App Store apps..."
 
   for app_id in "${mas_apps[@]}"; do
