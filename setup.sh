@@ -678,6 +678,8 @@ else
   echo "Skipping app launch section."
 fi
 
+brew cleanup
+
 echo ""
 echo "======================================="
 echo " Setup complete!"
