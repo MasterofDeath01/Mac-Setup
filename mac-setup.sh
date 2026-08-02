@@ -51,6 +51,10 @@ defaults_write_if_needed() {
   fi
 }
 
+
+# ----------------------------------------
+# Permissions
+# ----------------------------------------
 require_full_disk_access() {
   echo "Checking Full Disk Access..."
   local tcc_db="$HOME/Library/Application Support/com.apple.TCC/TCC.db"
@@ -67,9 +71,6 @@ exit 1
   echo "Full Disk Access confirmed."
 }
 
-# ----------------------------------------
-# Permissions
-# ----------------------------------------
 require_full_disk_access
 open / 2>/dev/null || true
 osascript -e 'tell application "Finder" to get name of front window' -e 'tell application "System Events" to get name of current user'
@@ -149,6 +150,12 @@ fi
 # -----------------------------
 
 if [[ "$CONFIGURE_MACOS_SETTINGS" == true ]]; then
+
+echo ""
+echo "======================================="
+echo " CONFIGURE MACOS SETTINGS"
+echo "======================================="
+echo ""
 
 # ----------------------------------------
 # Open Settings Panes
@@ -307,22 +314,15 @@ else
 echo "Skipping MacOS settings configuration..."
 fi
 
-# ----------------------------------------
-# Install Privileged Apps FIRST
-# ----------------------------------------
-
-privileged_apps=(
-  auto-subs
-  blackhole-2ch
-  microsoft-teams
-  mas
-  shutter-encoder
-  powerpoint-2024
-  excel-2024
-  word-2024
-  microsoft-serializer
-)
 if [[ "$INSTALL_BREW_APPS" == true ]]; then
+
+echo ""
+echo "======================================="
+echo " INSTALL APPS"
+echo "======================================="
+echo ""
+
+
 
 # ----------------------------------------
 # Install Homebrew if not present
@@ -369,11 +369,21 @@ eval "$($BREW_PREFIX/bin/brew shellenv)"
 
 brew update
 
-echo ""
-echo "======================================="
-echo " Homebrew installation complete!"
-echo "======================================="
-echo ""
+# ----------------------------------------
+# Install Privileged Apps FIRST
+# ----------------------------------------
+
+privileged_apps=(
+  auto-subs
+  blackhole-2ch
+  microsoft-teams
+  mas
+  shutter-encoder
+  powerpoint-2024
+  excel-2024
+  word-2024
+  microsoft-serializer
+)
 
 echo "Installing privileged apps..."
   for app in "${privileged_apps[@]}"; do
@@ -387,19 +397,17 @@ sleep 2
 
 osascript -e 'quit app "Shutter Encoder"' 2>/dev/null || true
 
+if [[ "$INSTALL_MAS_APPS" == true ]]; then
+
 mas_apps=(
-  6745342698 # Ublock Origin Lite
   310633997 #Whatsapp Messenger
+  6745342698 # Ublock Origin Lite
   6698876601 # Folder Preview
   1592917505 # Noir - Dark Mode for Safari
   510620098  # MediaInfo
   1448916662 # Step Two
   1355679052 # Dropover
-  # Whatsapp has been moved to top because it requires admin
-)
-
-if [[ "$INSTALL_MAS_APPS" == true ]]; then
-
+  
   echo "Installing Mac App Store apps..."
 
   for app_id in "${mas_apps[@]}"; do
@@ -408,7 +416,7 @@ if [[ "$INSTALL_MAS_APPS" == true ]]; then
   done
 
 else
-  echo "Skipping Mac App Store installs."
+  echo "Skipping Mac App Store installs..."
 fi
 
 # ----------------------------------------
@@ -426,6 +434,8 @@ fi
 # ----------------------------------------
 # Install custom apps & fonts
 # ----------------------------------------
+
+if [[ "$INSTALL_BREW_APPS" == true ]]; then
 
 brew tap masterofdeath01/apps
 brew trust masterofdeath01/apps
@@ -524,8 +534,6 @@ brew_apps=(
   font-comfortaa
 )
 
-if [[ "$INSTALL_BREW_APPS" == true ]]; then
-
   echo "Installing custom apps and fonts..."
 
   for cask in "${brew_apps[@]}"; do
@@ -534,7 +542,7 @@ if [[ "$INSTALL_BREW_APPS" == true ]]; then
   done
 
 else
-  echo "Skipping Homebrew app installation."
+  echo "Skipping Homebrew app installation..."
 fi
 
 # ----------------------------------------
@@ -542,6 +550,12 @@ fi
 # ----------------------------------------
 
 if [[ "$RUN_SPOTIFY_SETUP" == true ]]; then
+
+echo ""
+echo "======================================="
+echo " SPOTIFY SETUP"
+echo "======================================="
+echo ""
 
   if ! command -v spicetify >/dev/null 2>&1; then
    echo "Installing Spicetify CLI..."
@@ -644,8 +658,13 @@ sudo xattr -cr /Applications/Adobe\ Activation\ Tool.app
 # Launch Installed Apps
 # ----------------------------------------
 
+if [[ "$LAUNCH_APPS" == true ]]; then
+
 echo ""
-echo "Opening selected apps..."
+echo "======================================="
+echo " LAUNCHING APPS"
+echo "======================================="
+echo ""
 
 apps_to_open=(
   "LookAway"
@@ -669,8 +688,6 @@ apps_to_open=(
   "ChatGPT"
 )
 
-if [[ "$LAUNCH_APPS" == true ]]; then
-
   echo "Opening selected apps..."
 
   for app in "${apps_to_open[@]}"; do
@@ -684,7 +701,6 @@ fi
 
 brew cleanup
 
-echo ""
 echo "======================================="
 echo " Setup complete!"
 echo "======================================="
