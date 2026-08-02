@@ -390,12 +390,6 @@ mas_apps=(
   510620098  # MediaInfo
   1448916662 # Step Two
   1355679052 # Dropover
-  784801555  # Microsoft OneNote
-  462054704  # Microsoft Word
-  462058435  # Microsoft Excel
-  462062816  # Microsoft PowerPoint
-  823766827  # OneDrive
-  985367838  # Microsoft Outlook
   # Whatsapp has been moved to top because it requires admin
 )
 
