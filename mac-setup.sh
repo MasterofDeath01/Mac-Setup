@@ -191,6 +191,9 @@ echo "Configuring Finder preferences..."
 # Show all filename extensions
 defaults_write_if_needed NSGlobalDomain AppleShowAllExtensions -bool true
 
+# Show all hidden files
+defaults write com.apple.finder AppleShowAllFiles true
+
 # Set Finder search to current folder by default
 defaults_write_if_needed com.apple.finder FXDefaultSearchScope -string "SCcf"
 
