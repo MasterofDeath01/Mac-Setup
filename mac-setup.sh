@@ -592,6 +592,8 @@ chmod -R 755 /Applications/Spotify.app || true
   open -a "Spotify.app" || true
   read -rp "Log into Spotify fully, then press ENTER/RETURN..."
 
+echo ""
+echo "Waiting 60s before continuing..."
 sleep 60
 
 bash <(curl -sSL https://spotx-official.github.io/run.sh) --blockupdates
