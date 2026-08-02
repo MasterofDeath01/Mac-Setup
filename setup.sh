@@ -308,6 +308,19 @@ echo "Skipping MacOS settings configuration..."
 fi
 
 # ----------------------------------------
+# Install Privileged Apps FIRST
+# ----------------------------------------
+
+privileged_apps=(
+  auto-subs
+  blackhole-2ch
+  microsoft-teams
+  mas
+  shutter-encoder
+)
+if [[ "$INSTALL_BREW_APPS" == true ]]; then
+
+# ----------------------------------------
 # Install Homebrew if not present
 # ----------------------------------------
 if command -v brew >/dev/null 2>&1; then
@@ -358,18 +371,6 @@ echo " Homebrew installation complete!"
 echo "======================================="
 echo ""
 
-# ----------------------------------------
-# Install Privileged Apps FIRST
-# ----------------------------------------
-
-privileged_apps=(
-  auto-subs
-  blackhole-2ch
-  microsoft-teams
-  mas
-  shutter-encoder
-)
-if [[ "$INSTALL_BREW_APPS" == true ]]; then
 echo "Installing privileged apps..."
   for app in "${privileged_apps[@]}"; do
     echo "Installing $app..."
@@ -551,12 +552,18 @@ brew uninstall legacy-spotify 2>/dev/null || true
 
  brew_install_if_missing legacy-spotify
 
-chflags uchg /Applications/Spotify.app/Contents/MacOS/Spotify
+killall Spotify || true
+
+chflags -R nouchg /Applications/Spotify.app || true
+xattr -cr /Applications/Spotify.app || true
+chmod -R 755 /Applications/Spotify.app || true
+
   echo "Launching Spotify for first login..."
   open -a "Spotify.app" || true
   read -rp "Log into Spotify fully, then press ENTER/RETURN..."
 
-bash <(curl -sSL https://spotx-official.github.io/run.sh)
+bash <(curl -sSL https://spotx-official.github.io/run.sh) --blockupdates
+
 spicetify backup apply
 
   echo "Setting Spicetify Spotify path..."
