@@ -130,12 +130,6 @@ else
   REMOVE_MAU=false
 fi
 
-if ask_yes_no "Launch apps at end of setup?" "Y"; then
-  LAUNCH_APPS=true
-else
-  LAUNCH_APPS=false
-fi
-
 if ask_yes_no "Run Spotify setup?" "Y"; then
   RUN_SPOTIFY_SETUP=true
 else
