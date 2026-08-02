@@ -124,6 +124,12 @@ else
   INSTALL_BREW_APPS=false
 fi
 
+if ask_yes_no "Install App Store apps?" "Y"; then
+  INSTALL_MAS_APPS=true
+else
+  INSTALL_MAS_APPS=false
+fi
+
 if ask_yes_no "Remove Microsoft Auto-Update?" "Y"; then
   REMOVE_MAU=true
 else
