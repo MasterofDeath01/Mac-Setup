@@ -135,6 +135,12 @@ else
   RUN_SPOTIFY_SETUP=false
 fi
 
+if ask_yes_no "Refresh .DS_STORE files?" "N"; then
+  REFRESH_DS_STORE=true
+else
+  REFRESH_DS_STORE=false
+fi
+
 if ask_yes_no "Launch apps at end of setup?" "Y"; then
   LAUNCH_APPS=true
 else
@@ -197,15 +203,6 @@ defaults_write_if_needed com.apple.finder ShowStatusBar -bool true
 
 #Calculate Folder Sizes
 defaults_write_if_needed com.apple.finder FXCalculateAllSizes -bool true
-
-#Refresh .DS_Store
-  echo "Refreshing .DS_Store Files — this may take a while..."
-
-  find "$HOME" \
-    -path "$HOME/Library" -prune -o \
-    -name ".DS_Store" -type f -delete 2>/dev/null
-
-  echo ".DS_Store refresh complete."
 
 echo "Finder settings configured"
 
@@ -643,6 +640,23 @@ sudo xattr -cr /Applications/Mos.app
 sudo xattr -cr /Applications/'Topaz Video.app'
 sudo xattr -cr /Applications/'Adobe Downloader.app'
 sudo xattr -cr /Applications/Adobe\ Activation\ Tool.app
+
+# ----------------------------------------
+# Refresh DS_STORE
+# ----------------------------------------
+
+if [[ "$REFRESH_DS_STORE" == true ]]; then
+  echo "Refreshing .DS_Store Files — this may take a while..."
+
+  find "$HOME" \
+    -path "$HOME/Library" -prune -o \
+    -name ".DS_Store" -type f -delete 2>/dev/null
+
+  echo ".DS_Store refresh complete."
+
+else
+  echo "Skipping .DS_Store refresh."
+fi
 
 # ----------------------------------------
 # Launch Installed Apps
