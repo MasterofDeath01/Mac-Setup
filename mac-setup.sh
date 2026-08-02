@@ -317,6 +317,10 @@ privileged_apps=(
   microsoft-teams
   mas
   shutter-encoder
+  powerpoint-2024
+  excel-2024
+  word-2024
+  microsoft-serializer
 )
 if [[ "$INSTALL_BREW_APPS" == true ]]; then
 
