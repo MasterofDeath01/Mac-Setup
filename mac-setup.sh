@@ -4,7 +4,7 @@ set -euo pipefail
 echo ""
 
 # ----------------------------------------
-# Helpers (idempotency utilities)
+# Shell Functions
 # ----------------------------------------
 
 brew_install_if_missing() {
@@ -168,13 +168,15 @@ echo ""
 # Open Settings Panes
 # ----------------------------------------
 
-echo "Please configure the following in System Settings:"
-echo "- Screenshot shortcuts"
-echo "- Control Center"
-echo "- Desktop & Dock"
-echo "- Wallpaper"
-
 open "x-apple.systempreferences:"
+
+# ----------------------------------------
+# Disable Gatekeeper
+# ----------------------------------------
+
+echo "Adding 'Anywhere' option to allowed application settings..."
+sudo spctl --master-disable
+echo "'Anywhere' option added to allowed application settings.".
 
 # -----------------------------
 # Screenshot Directory Change
@@ -562,7 +564,6 @@ sudo rm -f /Library/PrivilegedHelperTools/com.microsoft.update.helper
 
 echo "Removed Microsoft AutoUpdate."
 
-
 else
   echo "Skipping removing MAU."
 fi
@@ -733,6 +734,7 @@ apps_to_open=(
   for app in "${apps_to_open[@]}"; do
     echo "Opening $app..."
     open -a "$app" 2>/dev/null || echo "$app not installed or failed to open"
+    sleep 1
   done
 
 else
