@@ -178,6 +178,21 @@ echo "Adding 'Anywhere' option to allowed application settings..."
 sudo spctl --master-disable
 echo "'Anywhere' option added to allowed application settings.".
 
+
+# -----------------------------
+# Enable Tap to Click
+# -----------------------------
+
+echo ""
+echo "Enabling tap to click..."
+
+defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+
+echo "Tap to click enabled."
+
 # -----------------------------
 # Screenshot Directory Change
 # -----------------------------
@@ -196,6 +211,8 @@ echo "Screenshot save location set to ~/Pictures/Screenshots."
 # -----------------------------
 # Finder Settings
 # -----------------------------
+
+echo ""
 echo "Configuring Finder preferences..."
 
 # Show all filename extensions
@@ -224,10 +241,11 @@ echo "Finder settings configured"
 # TextEdit Preferences
 # -----------------------------
 
+echo ""
 echo "Configuring TextEdit..."
 
-# Force plain text mode
-defaults_write_if_needed com.apple.TextEdit RichText -bool false
+# Force plain text mode as default
+defaults_write_if_needed com.apple.TextEdit RichText -int 0
 
 # Encoding
 defaults_write_if_needed com.apple.TextEdit PlainTextEncoding -int 4
@@ -240,11 +258,17 @@ defaults_write_if_needed NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool
 # Disable iCloud new document default
 defaults_write_if_needed NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
 
+# Force TextEdit to open new document automatically
+defaults_write_if_needed com.apple.TextEdit NSShowAppCentricOpenPanelInsteadOfUntitledFile -bool false
+defaults_write_if_needed -g NSShowAppCentricOpenPanelInsteadOfUntitledFile -bool false
+
 echo "TextEdit preferences configured."
 
 # -----------------------------
 # Dock Settings
 # -----------------------------
+
+echo ""
 echo "Configuring Dock settings..."
 
 # Enable magnification
@@ -274,6 +298,7 @@ echo "Dock settings applied."
 # Change Spelling Settings
 # -----------------------------
 
+echo ""
 echo "Changing Spelling Settings..."
 
 # Disable automatic spelling correction
@@ -286,20 +311,23 @@ defaults_write_if_needed NSGlobalDomain NSAutomaticCapitalizationEnabled -bool f
 defaults_write_if_needed NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
 defaults_write_if_needed NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
 
-echo "Autocorrect, spelling correction, and capitalization disabled."
-
-echo ""
 echo "Spelling Settings applied."
 
 # -----------------------------
 # Miscellaneous Settings
 # -----------------------------
+
+echo ""
+echo "Configuring other settings..."
+
 defaults_write_if_needed com.apple.controlcenter BatteryShowPercentage -bool true
 defaults_write_if_needed com.apple.loginwindow TALLogoutSavesState -bool false
 defaults_write_if_needed com.apple.coreservices.uiagent CSUIShowCloudSetupDialogs -bool false
 defaults_write_if_needed NSGlobalDomain NSWindowResizeTime -float 0.001
 defaults_write_if_needed NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
 defaults_write_if_needed NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 -bool true
+
+echo "Configured other settings."
 
 # -----------------------------
 # Apply settings
@@ -319,9 +347,21 @@ fi
 
 if [[ "$INSTALL_BREW_APPS" == true ]]; then
 
+# ----------------------------------------
+# Install Rosetta
+# ----------------------------------------
+if [[ "$(uname -m)" == "arm64" ]]; then
+  if ! /usr/bin/pgrep oahd >/dev/null 2>&1; then
+    echo "Installing Rosetta..."
+    softwareupdate --install-rosetta --agree-to-license
+  else
+    echo "Rosetta already installed."
+  fi
+fi
+
 echo ""
 echo "======================================="
-echo " INSTALL APPS"
+echo " INSTALLING APPS"
 echo "======================================="
 echo ""
 
@@ -404,7 +444,7 @@ osascript -e 'quit app "Shutter Encoder"' 2>/dev/null || true
 if [[ "$INSTALL_MAS_APPS" == true ]]; then
 
 mas_apps=(
-  310633997  #Whatsapp Messenger
+  310633997  # Whatsapp Messenger
   6745342698 # Ublock Origin Lite
   6698876601 # Folder Preview
   1592917505 # Noir - Dark Mode for Safari
@@ -422,18 +462,6 @@ mas_apps=(
 
 else
   echo "Skipping Mac App Store installs..."
-fi
-
-# ----------------------------------------
-# Install Rosetta (for Apple Silicon)
-# ----------------------------------------
-if [[ "$(uname -m)" == "arm64" ]]; then
-  if ! /usr/bin/pgrep oahd >/dev/null 2>&1; then
-    echo "Installing Rosetta..."
-    softwareupdate --install-rosetta --agree-to-license
-  else
-    echo "Rosetta already installed."
-  fi
 fi
 
 # ----------------------------------------
@@ -678,24 +706,6 @@ sudo xattr -cr /Applications/'Adobe Downloader.app'
 sudo xattr -cr /Applications/Adobe\ Activation\ Tool.app
 
 # ----------------------------------------
-# Refresh DS_STORE
-# ----------------------------------------
-
-if [[ "$REFRESH_DS_STORE" == true ]]; then
-  echo ""
-  echo "Refreshing .DS_Store Files — this may take a while..."
-
-  find "$HOME" \
-    -path "$HOME/Library" -prune -o \
-    -name ".DS_Store" -type f -delete 2>/dev/null
-
-  echo ".DS_Store refresh complete."
-
-else
-  echo "Skipping .DS_Store refresh."
-fi
-
-# ----------------------------------------
 # Launch Installed Apps
 # ----------------------------------------
 
@@ -739,6 +749,24 @@ apps_to_open=(
 
 else
   echo "Skipping app launch section."
+fi
+
+# ----------------------------------------
+# Refresh DS_STORE
+# ----------------------------------------
+
+if [[ "$REFRESH_DS_STORE" == true ]]; then
+  echo ""
+  echo "Refreshing .DS_Store Files — this may take a while..."
+
+  find "$HOME" \
+    -path "$HOME/Library" -prune -o \
+    -name ".DS_Store" -type f -delete 2>/dev/null
+
+  echo ".DS_Store refresh complete."
+
+else
+  echo "Skipping .DS_Store refresh."
 fi
 
 brew cleanup
