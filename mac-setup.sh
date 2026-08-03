@@ -36,23 +36,6 @@ mas_install_if_missing() {
   fi
 }
 
-defaults_write_if_needed() {
-  local domain="$1"
-  local key="$2"
-  shift 2
-
-  local current
-  current=$(defaults read "$domain" "$key" 2>/dev/null || true)
-
-  if [[ "$current" == "$*" ]]; then
-    echo "$domain $key already set."
-  else
-    defaults write "$domain" "$key" "$@"
-    echo "Updated $domain $key"
-  fi
-}
-
-
 # ----------------------------------------
 # Permissions
 # ----------------------------------------
@@ -204,7 +187,7 @@ echo "Configuring screenshot save location..."
 mkdir -p "$HOME/Pictures/Screenshots"
 
 # Set screenshot save location
-defaults_write_if_needed com.apple.screencapture location -string "$HOME/Pictures/Screenshots" 
+defaults write com.apple.screencapture location -string "$HOME/Pictures/Screenshots" 
 
 echo "Screenshot save location set to ~/Pictures/Screenshots."
 
@@ -215,27 +198,37 @@ echo "Screenshot save location set to ~/Pictures/Screenshots."
 echo ""
 echo "Configuring Finder preferences..."
 
+# Disable warning when changing filename extensions
+defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
+
 # Show all filename extensions
-defaults_write_if_needed NSGlobalDomain AppleShowAllExtensions -bool true
+defaults write NSGlobalDomain AppleShowAllExtensions -bool true
 
 # Show all hidden files
 defaults write com.apple.finder AppleShowAllFiles true
 
 # Set Finder search to current folder by default
-defaults_write_if_needed com.apple.finder FXDefaultSearchScope -string "SCcf"
+defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
+
+# Disable .DS_Store creation in External Drives and Network Drives
+defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
+defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
 
 # Set new Finder windows to open Downloads folder
-defaults_write_if_needed com.apple.finder NewWindowTarget -string "PfLo"
-defaults_write_if_needed com.apple.finder NewWindowTargetPath -string "file://${HOME}/Downloads/"
+defaults write com.apple.finder NewWindowTarget -string "PfLo"
+defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}/Downloads/"
 
-#Show Path and Status Bar
-defaults_write_if_needed com.apple.finder ShowPathbar -bool true
-defaults_write_if_needed com.apple.finder ShowStatusBar -bool true
+# Show Path and Status Bar
+defaults write com.apple.finder ShowPathbar -bool true
+defaults write com.apple.finder ShowStatusBar -bool true
 
-#Calculate Folder Sizes
-defaults_write_if_needed com.apple.finder FXCalculateAllSizes -bool true
+# Make List View the default view
+defaults write com.apple.Finder FXPreferredViewStyle Nlsv
 
-echo "Finder settings configured"
+# Calculate Folder Sizes
+defaults write com.apple.finder FXCalculateAllSizes -bool true
+
+echo "Finder settings configured."
 
 # -----------------------------
 # TextEdit Preferences
@@ -245,22 +238,22 @@ echo ""
 echo "Configuring TextEdit..."
 
 # Force plain text mode as default
-defaults_write_if_needed com.apple.TextEdit RichText -int 0
+defaults write com.apple.TextEdit RichText -int 0
 
 # Encoding
-defaults_write_if_needed com.apple.TextEdit PlainTextEncoding -int 4
-defaults_write_if_needed com.apple.TextEdit PlainTextEncodingForWrite -int 4
+defaults write com.apple.TextEdit PlainTextEncoding -int 4
+defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
 
 # Global smart text rules
-defaults_write_if_needed NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
-defaults_write_if_needed NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
 
 # Disable iCloud new document default
-defaults_write_if_needed NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
+defaults write NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
 
 # Force TextEdit to open new document automatically
-defaults_write_if_needed com.apple.TextEdit NSShowAppCentricOpenPanelInsteadOfUntitledFile -bool false
-defaults_write_if_needed -g NSShowAppCentricOpenPanelInsteadOfUntitledFile -bool false
+defaults write com.apple.TextEdit NSShowAppCentricOpenPanelInsteadOfUntitledFile -bool false
+defaults write -g NSShowAppCentricOpenPanelInsteadOfUntitledFile -bool false
 
 echo "TextEdit preferences configured."
 
@@ -272,25 +265,28 @@ echo ""
 echo "Configuring Dock settings..."
 
 # Enable magnification
-defaults_write_if_needed com.apple.dock magnification -bool true
-defaults_write_if_needed com.apple.dock largesize -int 64
+defaults write com.apple.dock magnification -bool true
+defaults write com.apple.dock largesize -int 64
 
 # Enable auto-hide
-defaults_write_if_needed com.apple.dock autohide -bool true
+defaults write com.apple.dock autohide -bool true
 
 # Make Dock Faster
-defaults_write_if_needed com.apple.dock autohide-delay -int 0
-defaults_write_if_needed com.apple.dock autohide-time-modifier -float 0.5
+defaults write com.apple.dock autohide-delay -int 0
+defaults write com.apple.dock autohide-time-modifier -float 0.5
 
 # Remove all apps from dock
-defaults_write_if_needed com.apple.dock persistent-apps -array
+defaults write com.apple.dock persistent-apps -array
+
+# Minimise Window into application icon
+defaults write com.apple.dock minimize-to-application -bool true
 
 # Disable "Show suggested and recent apps in Dock"
-defaults_write_if_needed com.apple.dock show-recents -bool false
+defaults write com.apple.dock show-recents -bool false
 
 # Disable Mission Control & App Expose
-defaults_write_if_needed com.apple.dock showMissionControlGestureEnabled -bool false
-defaults_write_if_needed com.apple.dock showAppExposeGestureEnabled -bool false
+defaults write com.apple.dock showMissionControlGestureEnabled -bool false
+defaults write com.apple.dock showAppExposeGestureEnabled -bool false
 
 echo "Dock settings applied."
 
@@ -302,14 +298,14 @@ echo ""
 echo "Changing Spelling Settings..."
 
 # Disable automatic spelling correction
-defaults_write_if_needed NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
 
 # Disable autocapitalization
-defaults_write_if_needed NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
 
 # Disable smart quotes and dashes
-defaults_write_if_needed NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
-defaults_write_if_needed NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
 
 echo "Spelling Settings applied."
 
@@ -320,18 +316,20 @@ echo "Spelling Settings applied."
 echo ""
 echo "Configuring other settings..."
 
-defaults_write_if_needed com.apple.controlcenter BatteryShowPercentage -bool true
-defaults_write_if_needed com.apple.loginwindow TALLogoutSavesState -bool false
-defaults_write_if_needed com.apple.coreservices.uiagent CSUIShowCloudSetupDialogs -bool false
-defaults_write_if_needed NSGlobalDomain NSWindowResizeTime -float 0.001
-defaults_write_if_needed NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
-defaults_write_if_needed NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 -bool true
+defaults write com.apple.controlcenter BatteryShowPercentage -bool true
+defaults write com.apple.loginwindow TALLogoutSavesState -bool false
+defaults write com.apple.coreservices.uiagent CSUIShowCloudSetupDialogs -bool false
+defaults write NSGlobalDomain NSWindowResizeTime -float 0.001
+defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
+defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 -bool true
 
 echo "Configured other settings."
 
 # -----------------------------
 # Apply settings
 # -----------------------------
+
+echo ""
 killall Dock 2>/dev/null || true
 killall Finder 2>/dev/null || true
 killall ControlCenter 2>/dev/null || true
@@ -472,7 +470,7 @@ if [[ "$INSTALL_BREW_APPS" == true ]]; then
 
 brew_apps=(
 
-#Custom Brew Casks
+# Custom Brew Casks
 
   adobe-activation-tool
   topaz-video-enhance-ai
