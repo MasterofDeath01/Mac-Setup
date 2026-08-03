@@ -39,6 +39,7 @@ mas_install_if_missing() {
 # ----------------------------------------
 # Permissions
 # ----------------------------------------
+
 require_full_disk_access() {
   echo "Checking Full Disk Access..."
   local tcc_db="$HOME/Library/Application Support/com.apple.TCC/TCC.db"
@@ -101,11 +102,15 @@ else
   CONFIGURE_MACOS_SETTINGS=false
 fi
 
+echo ""
+
 if ask_yes_no "Install Homebrew apps?" "Y"; then
   INSTALL_BREW_APPS=true
 else
   INSTALL_BREW_APPS=false
 fi
+
+echo ""
 
 if ask_yes_no "Install App Store apps?" "Y"; then
   INSTALL_MAS_APPS=true
@@ -113,11 +118,15 @@ else
   INSTALL_MAS_APPS=false
 fi
 
+echo ""
+
 if ask_yes_no "Remove Microsoft Auto-Update?" "Y"; then
   REMOVE_MAU=true
 else
   REMOVE_MAU=false
 fi
+
+echo ""
 
 if ask_yes_no "Run Spotify setup?" "Y"; then
   RUN_SPOTIFY_SETUP=true
@@ -125,11 +134,15 @@ else
   RUN_SPOTIFY_SETUP=false
 fi
 
+echo ""
+
 if ask_yes_no "Refresh .DS_STORE files?" "N"; then
   REFRESH_DS_STORE=true
 else
   REFRESH_DS_STORE=false
 fi
+
+echo ""
 
 if ask_yes_no "Launch apps at end of setup?" "Y"; then
   LAUNCH_APPS=true
