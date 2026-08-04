@@ -455,6 +455,7 @@ osascript -e 'quit app "Shutter Encoder"' 2>/dev/null || true
 if [[ "$INSTALL_MAS_APPS" == true ]]; then
 
 mas_apps=(
+  545519333  # Amazon Prime Video
   310633997  # Whatsapp Messenger
   6745342698 # Ublock Origin Lite
   6698876601 # Folder Preview
